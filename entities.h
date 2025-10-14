@@ -5,17 +5,19 @@ typedef struct {
 
 typedef struct {
     ll id;
-    time_t dateTime;
-    ll purchasedProductId;
-    int skuQty;
     ll userId;
+    ll purchasedProductId;
+    time_t dateTime;
+    int skuQty;
+    char active; // '1' = ativo, '0' = excluido
 } Order;
 
 typedef struct {
     ll purchasedProductId;
-    ll brandId;
-    int price; //centavos
-    char productGender;
     ll categoryId;
+    ll brandId;
+    int price; // em centavos
+    char productGender;
     char categoryAlias[MAX_CATEGORY_ALIAS];
+    char active; // '1' = ativo, '0' = excluido
 } Product;

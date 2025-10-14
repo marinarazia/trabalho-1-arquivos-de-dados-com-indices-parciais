@@ -6,18 +6,18 @@ Comando para compilar: gcc main.c
 TODO: 
     [x] arquivo de dados para binario
     [x] arquivo de dados ordenado
-    [x] função criar arquivo indice parcial
-    [x] arquivo de dados produtos não duplicado
+    [x] funcao criar arquivo indice parcial
+    [x] arquivo de dados produtos nao duplicado
 
     [x] listagem dos dados
-    [] funções de consulta
-    [] funções de remoção
-    [] funções de inserção
-        - (sugestão: remoção lógica e inserção por área de extensão)
+    [] funcoes de consulta
+    [] funcoes de remocao
+    [x] funcoes de insercao
+        - (sugestao: remocao logica e insercao por area de extensao)
 
-    [] completar switch no main 
+    [x] completar switch no main 
 
-    pra fazer a area de extensão talves precise adicionar mais um campo 
+    pra fazer a area de extensao talvez precise adicionar mais um campo 
     nos structs em entities.h
 */
 
@@ -89,22 +89,28 @@ int main()
                 scanf("%lld", &inputId);
                 searchProductById(inputId);
                 break;            
-            /*
-            case 5:
-                insertOrder();
-                break;
-            case 6:
-                insertProduct();
-                break;
-            case 7:
-                removeOrder();
-                break;
-            case 8:
-                removeProduct();
-                break;
-            */
-        }
-    } while (option != 0);
+            case 5: {
+			    Order newOrder = createNewOrder();
+			    insertOrder(newOrder);
+			    break;
+			}
+			case 6: {
+			    Product newProduct = createNewProduct();
+			    insertProduct(newProduct);
+			    break;
+			}
+			case 7:
+			    printf("Digite o ID do pedido para remover: ");
+			    scanf("%lld", &inputId);
+			    removeOrder(inputId);
+			    break;
+			case 8:
+			    printf("Digite o ID do produto para remover: ");
+			    scanf("%lld", &inputId);
+			    removeProduct(inputId);
+			    break;
+		}
+	} while (option != 0);
 
     return 0;
 }

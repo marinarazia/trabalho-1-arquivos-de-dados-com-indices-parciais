@@ -41,7 +41,7 @@ int createSortedTemps(const char *inputFile, size_t recordSize,
     if (!in) { printf("Erro ao abrir %s\n", inputFile); return 0; }
 
     void *buffer = malloc(MAX_RECORDS_IN_MEMORY * recordSize);
-    if (!buffer) { printf("Erro de memória!\n"); fclose(in); return 0; }
+    if (!buffer) { printf("Erro de memoria.\n"); fclose(in); return 0; }
 
     int tempCount = 0;
     size_t n;
@@ -83,7 +83,7 @@ int mergeTwoTemps(const char *file1, const char *file2, const char *outFile,
 
     void *r1 = malloc(recordSize);
     void *r2 = malloc(recordSize);
-    if (!r1 || !r2) { printf("Erro de memória no merge!\n"); return 0; }
+    if (!r1 || !r2) { printf("Erro de memoria no merge.\n"); return 0; }
 
     int has1 = fread(r1, recordSize, 1, f1);
     int has2 = fread(r2, recordSize, 1, f2);
@@ -135,7 +135,7 @@ void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile)
     fclose(out);
 
     rename(uniqueFile, BIN_PRODUCT);
-    printf("Arquivo de produtos únicos criado: %s\n", uniqueFile);
+    printf("Arquivo de produtos unicos criado: %s\n", uniqueFile);
 }
 
 void mergeAllTemps(int tempCount, size_t recordSize,
@@ -144,13 +144,14 @@ void mergeAllTemps(int tempCount, size_t recordSize,
 {
     int pass = 0;
     int current = tempCount;
-
+	int i;
+	
     while (current > 1) 
     {
-        printf("Intercalação: %d arquivos -> ", current);
+        printf("Intercalacao: %d arquivos -> ", current);
 
         int newCount = 0;
-        for (int i = 0; i < current; i += 2) {
+        for (i = 0; i < current; i += 2) {
             char file1[64], file2[64], outFile[64];
 
             if (pass == 0)

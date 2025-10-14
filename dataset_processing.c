@@ -3,20 +3,23 @@ void convertTextToBinary();
 int createIndex();
 */
 
-void convertTextToBinary() {
+void convertTextToBinary() 
+{
     FILE *csv = fopen(DATASET_CSV, "r");
     FILE *orders = fopen(BIN_ORDER, "wb");
     FILE *products = fopen(BIN_PRODUCT, "wb");
 
-    if (!csv || !orders || !products) {
-        printf("Erro ao abrir arquivos!\n");
+    if (!csv || !orders || !products) 
+	{
+        printf("Erro ao abrir arquivos.\n");
         exit(1);
     }
 
     char line[512];
     fgets(line, sizeof(line), csv);
 
-    while (fgets(line, sizeof(line), csv)) {
+    while (fgets(line, sizeof(line), csv)) 
+	{
         line[strcspn(line, "\r\n")] = 0;
 
         Order o = {0};
@@ -27,15 +30,19 @@ void convertTextToBinary() {
         int col = 0;
         char *start = line;
         char *end;
-        while (col < 10) {
+        while (col < 10) 
+		{
             end = strchr(start, ',');
-            if (end) {
+            if (end) 
+			{
                 size_t len = end - start;
                 if (len >= sizeof(cols[col])) len = sizeof(cols[col])-1;
                 strncpy(cols[col], start, len);
                 cols[col][len] = '\0';
                 start = end + 1;
-            } else {
+            } 
+			else 
+			{
                 strncpy(cols[col], start, sizeof(cols[col])-1);
                 cols[col][sizeof(cols[col])-1] = '\0';
             }
@@ -58,7 +65,9 @@ void convertTextToBinary() {
         struct tm tm = {0};
         int y,m,d,H,M,S;
         o.dateTime = 0;
-        if (sscanf(dateStr, "%d-%d-%d %d:%d:%d", &y,&m,&d,&H,&M,&S) == 6) {
+        
+        if (sscanf(dateStr, "%d-%d-%d %d:%d:%d", &y,&m,&d,&H,&M,&S) == 6) 
+		{
             tm.tm_year = y - 1900;
             tm.tm_mon = m - 1;
             tm.tm_mday = d;
@@ -77,7 +86,7 @@ void convertTextToBinary() {
     fclose(csv);
     fclose(orders);
     fclose(products);
-    printf("Conversão concluída.\n");
+    printf("Conversao concluida.\n");
 }
 
 int createIndex() 
@@ -89,7 +98,7 @@ int createIndex()
 
     if (!orders || !products || !indexOrders || !indexProducts)
     {
-        printf("Erro ao abrir arquivos para indexação!\n");
+        printf("Erro ao abrir arquivos para indexacao.\n");
         return 0;
     }
 
@@ -100,7 +109,8 @@ int createIndex()
 
     while (fread(&o, sizeof(Order), 1, orders))
     {
-        if (count % SEGMENT_SIZE == 0) {
+        if (count % SEGMENT_SIZE == 0) 
+		{
             Index idx = {o.id, pos};
             fwrite(&idx, sizeof(Index), 1, indexOrders);
         }
@@ -111,8 +121,10 @@ int createIndex()
     pos = 0;
     count = 0;
 
-    while (fread(&p, sizeof(Product), 1, products)) {
-        if (count % SEGMENT_SIZE == 0) {
+    while (fread(&p, sizeof(Product), 1, products)) 
+	{
+        if (count % SEGMENT_SIZE == 0) 
+		{
             Index idx = {p.purchasedProductId, pos};
             fwrite(&idx, sizeof(Index), 1, indexProducts);
         }
@@ -125,7 +137,7 @@ int createIndex()
     fclose(indexOrders);
     fclose(indexProducts);
 
-    printf("Índices criados.\n");
+    printf("Indices criados.\n");
     return 1;
 }
 
