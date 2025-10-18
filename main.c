@@ -10,15 +10,14 @@ TODO:
     [x] arquivo de dados produtos nao duplicado
 
     [x] listagem dos dados
-    [] funcoes de consulta
-    [] funcoes de remocao
+    [x] funcoes de consulta
+    [x] funcoes de remocao
     [x] funcoes de insercao
-        - (sugestao: remocao logica e insercao por area de extensao)
-
     [x] completar switch no main 
 
-    pra fazer a area de extensao talvez precise adicionar mais um campo 
-    nos structs em entities.h
+    [] pesquisa binária
+    [] add elo para inserção por area de extensão
+    [] (Ricardo) função reestruturar indices e arquivo
 */
 
 #include <stdio.h>
@@ -33,10 +32,12 @@ TODO:
 #include "search.c"
 #include "insert.c"
 
+static int modificationCount = 0;
+
 int main() 
 {
-    int option;
-    ll inputId;
+    int option = 0;
+    ll inputId = 0;
 
     convertTextToBinary();
 
@@ -75,6 +76,12 @@ int main()
         scanf("%d", &option);
         getchar();
 
+        if (modificationCount > MAX_MODIFICATIONS)
+        {
+            restructureDataset();
+            modificationCount = 0;
+        }
+
         switch (option) 
         {
             case 1: listOrders(5); break;
@@ -89,25 +96,27 @@ int main()
                 scanf("%lld", &inputId);
                 searchProductById(inputId);
                 break;            
-            case 5: {
+            case 5:
 			    Order newOrder = createNewOrder();
 			    insertOrder(newOrder);
+                modificationCount++;
 			    break;
-			}
-			case 6: {
+			case 6:
 			    Product newProduct = createNewProduct();
 			    insertProduct(newProduct);
+                modificationCount++;
 			    break;
-			}
 			case 7:
 			    printf("Digite o ID do pedido para remover: ");
 			    scanf("%lld", &inputId);
 			    removeOrder(inputId);
+                modificationCount++;
 			    break;
 			case 8:
 			    printf("Digite o ID do produto para remover: ");
 			    scanf("%lld", &inputId);
 			    removeProduct(inputId);
+                modificationCount++;
 			    break;
 		}
 	} while (option != 0);

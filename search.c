@@ -80,7 +80,7 @@ int searchProductById(const ll productId)
         prevIdx = idx;
     }
     
-    fseek(dataFile, prevIdx.position, SEEK_SET);
+    fseek(dataFile, prevIdx.segmentBase, SEEK_SET);
     
     Product p;
     while (fread(&p, sizeof(Product), 1, dataFile)) 
@@ -110,19 +110,23 @@ int searchOrdersByUser(const ll userId)
     Order o;
     int found = 0;
     
-    while (fread(&o, sizeof(Order), 1, dataFile)) {
-        if (o.userId == userId) {
+    while (fread(&o, sizeof(Order), 1, dataFile))
+    {
+        if (o.userId == userId)
+        {
             char buffer[32];
             struct tm *tm_info = localtime(&o.dateTime);
             strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
             
             printf("Pedido ID: %lld | Produto: %lld | Data: %s | Qtd: %d\n",
                    o.id, o.purchasedProductId, buffer, o.skuQty);
+
             found++;
         }
     }
     
-    if (!found) {
+    if (!found) 
+    {
         printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
     }
     

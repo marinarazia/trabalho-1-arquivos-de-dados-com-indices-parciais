@@ -1,7 +1,65 @@
 /*
-void convertTextToBinary();
 int createIndex();
+void convertTextToBinary();
 */
+
+//Todo: Ricardo implementar
+int restructureDataset()
+{
+    return 0;
+}
+
+int createIndex() 
+{
+    FILE *orders = fopen(BIN_ORDER, "rb");
+    FILE *products = fopen(BIN_PRODUCT, "rb");
+    FILE *indexOrders = fopen(INDEX_ORDER, "wb");
+    FILE *indexProducts = fopen(INDEX_PRODUCT, "wb");
+
+    if (!orders || !products || !indexOrders || !indexProducts)
+    {
+        printf("Erro ao abrir arquivos para indexacao.\n");
+        return 0;
+    }
+
+    Order o;
+    Product p;
+    long pos = 0;
+    int count = 0;
+
+    while (fread(&o, sizeof(Order), 1, orders))
+    {
+        if (count % SEGMENT_SIZE == 0) 
+		{
+            Index idx = {o.id, pos};
+            fwrite(&idx, sizeof(Index), 1, indexOrders);
+        }
+        pos = ftell(orders);
+        count++;
+    }
+
+    pos = 0;
+    count = 0;
+
+    while (fread(&p, sizeof(Product), 1, products)) 
+	{
+        if (count % SEGMENT_SIZE == 0) 
+		{
+            Index idx = {p.purchasedProductId, pos};
+            fwrite(&idx, sizeof(Index), 1, indexProducts);
+        }
+        pos = ftell(products);
+        count++;
+    }
+
+    fclose(orders);
+    fclose(products);
+    fclose(indexOrders);
+    fclose(indexProducts);
+
+    printf("Indices criados.\n");
+    return 1;
+}
 
 void convertTextToBinary() 
 {
@@ -88,56 +146,3 @@ void convertTextToBinary()
     fclose(products);
     printf("Conversao concluida.\n");
 }
-
-int createIndex() 
-{
-    FILE *orders = fopen(BIN_ORDER, "rb");
-    FILE *products = fopen(BIN_PRODUCT, "rb");
-    FILE *indexOrders = fopen(INDEX_ORDER, "wb");
-    FILE *indexProducts = fopen(INDEX_PRODUCT, "wb");
-
-    if (!orders || !products || !indexOrders || !indexProducts)
-    {
-        printf("Erro ao abrir arquivos para indexacao.\n");
-        return 0;
-    }
-
-    Order o;
-    Product p;
-    long pos = 0;
-    int count = 0;
-
-    while (fread(&o, sizeof(Order), 1, orders))
-    {
-        if (count % SEGMENT_SIZE == 0) 
-		{
-            Index idx = {o.id, pos};
-            fwrite(&idx, sizeof(Index), 1, indexOrders);
-        }
-        pos = ftell(orders);
-        count++;
-    }
-
-    pos = 0;
-    count = 0;
-
-    while (fread(&p, sizeof(Product), 1, products)) 
-	{
-        if (count % SEGMENT_SIZE == 0) 
-		{
-            Index idx = {p.purchasedProductId, pos};
-            fwrite(&idx, sizeof(Index), 1, indexProducts);
-        }
-        pos = ftell(products);
-        count++;
-    }
-
-    fclose(orders);
-    fclose(products);
-    fclose(indexOrders);
-    fclose(indexProducts);
-
-    printf("Indices criados.\n");
-    return 1;
-}
-

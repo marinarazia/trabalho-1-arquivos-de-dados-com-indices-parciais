@@ -127,6 +127,7 @@ void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile)
         {
             if (curr.purchasedProductId != prev.purchasedProductId)
                 fwrite(&curr, sizeof(Product), 1, out);
+
             prev = curr;
         }
     }
