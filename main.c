@@ -3,7 +3,7 @@ Integrantes: Ricardo Alberti, Marina Razia
 
 Comando para compilar: gcc main.c
 
-TODO:
+TODO: 
     [x] arquivo de dados para binario
     [x] arquivo de dados ordenado
     [x] funcao criar arquivo indice parcial
@@ -13,13 +13,13 @@ TODO:
     [x] funcoes de consulta
     [x] funcoes de remocao
     [x] funcoes de insercao
-        - (sugestao: remocao logica e insercao por area de extensao)
+    [x] completar switch no main 
 
-    [x] completar switch no main
-
-    pra fazer a area de extensao talvez precise adicionar mais um campo
-    nos structs em entities.h
+    [x] pesquisa binária
+    [x] add elo para inserção por area de extensão
+    [] (Ricardo) função reestruturar indices e arquivo
 */
+
 
 #include <stdio.h>
 #include <stdlib.h>
