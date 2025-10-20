@@ -1,6 +1,7 @@
 typedef struct {
     ll key;
-    long segmentBase; 
+    long segmentBase;
+    long position;
 } Index;
 
 typedef struct {
@@ -10,6 +11,7 @@ typedef struct {
     time_t dateTime;
     int skuQty;
     char active; // '1' = ativo, '0' = excluido
+    ll next; // -1 = fim
 } Order;
 
 typedef struct {
@@ -20,4 +22,7 @@ typedef struct {
     char productGender;
     char categoryAlias[MAX_CATEGORY_ALIAS];
     char active; // '1' = ativo, '0' = excluido
+    ll next; // -1 = fim
 } Product;
+
+long findOrderPosition(ll orderId);

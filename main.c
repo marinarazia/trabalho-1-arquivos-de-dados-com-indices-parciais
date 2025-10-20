@@ -3,21 +3,21 @@ Integrantes: Ricardo Alberti, Marina Razia
 
 Comando para compilar: gcc main.c
 
-TODO: 
+TODO:
     [x] arquivo de dados para binario
     [x] arquivo de dados ordenado
     [x] funcao criar arquivo indice parcial
     [x] arquivo de dados produtos nao duplicado
 
     [x] listagem dos dados
-    [] funcoes de consulta
-    [] funcoes de remocao
+    [x] funcoes de consulta
+    [x] funcoes de remocao
     [x] funcoes de insercao
         - (sugestao: remocao logica e insercao por area de extensao)
 
-    [x] completar switch no main 
+    [x] completar switch no main
 
-    pra fazer a area de extensao talvez precise adicionar mais um campo 
+    pra fazer a area de extensao talvez precise adicionar mais um campo
     nos structs em entities.h
 */
 
@@ -33,7 +33,7 @@ TODO:
 #include "search.c"
 #include "insert.c"
 
-int main() 
+int main()
 {
     int option;
     ll inputId;
@@ -53,8 +53,8 @@ int main()
     if (!indexOrder || !indexProduct)
     {
         createIndex();
-    } 
-    else 
+    }
+    else
     {
         fclose(indexOrder);
         fclose(indexProduct);
@@ -64,23 +64,26 @@ int main()
         printf("\n--- MENU ---\n");
         printf("1 - Listar ordens de compra\n");
         printf("2 - Listar produtos\n");
-        printf("3 - Pesquisar compras de usuário\n");
-        printf("4 - Pesquisar produto por id\n");
-        printf("5 - Inserir ordem de compra\n");
-        printf("6 - Inserir produto\n");
-        printf("7 - Remover ordem de compra\n");
-        printf("8 - Remover produto\n");
+        printf("3 - Pesquisar compras de usuario\n");
+        printf("4 - Pesquisar produto por id (busca binaria)\n");
+        printf("5 - Pesquisar ordem com elo de extensao (busca binaria)\n");
+        printf("6 - Inserir ordem de compra\n");
+        printf("7 - Inserir produto\n");
+        printf("8 - Inserir ordem com elo de extensao\n");
+        printf("9 - Remover ordem de compra\n");
+        printf("10 - Remover produto\n");
+        printf("11 - Reorganizar arquivo\n");
         printf("0 - Sair\n");
         printf("Escolha: ");
         scanf("%d", &option);
         getchar();
 
-        switch (option) 
+        switch (option)
         {
             case 1: listOrders(5); break;
             case 2: listProducts(5); break;
             case 3:
-                printf("Digite o ID do usuário: ");
+                printf("Digite o ID do usuario: ");
                 scanf("%lld", &inputId);
                 searchOrdersByUser(inputId);
                 break;
@@ -88,27 +91,46 @@ int main()
                 printf("Digite o ID do produto: ");
                 scanf("%lld", &inputId);
                 searchProductById(inputId);
-                break;            
-            case 5: {
-			    Order newOrder = createNewOrder();
-			    insertOrder(newOrder);
-			    break;
-			}
-			case 6: {
-			    Product newProduct = createNewProduct();
-			    insertProduct(newProduct);
-			    break;
-			}
+                break;
+            case 5:
+            	printf("Digite o ID do pedido: ");
+			    scanf("%lld", &inputId);
+			    searchOrderByIdWithExtension(inputId);
+            case 6:
+            	{
+            		Order newOrder = createNewOrder();
+				    insertOrder(newOrder);
+				    break;
+				}
+			    
 			case 7:
+				{
+					Product newProduct = createNewProduct();
+				    insertProduct(newProduct);
+				    break;
+				}
+			    
+			case 8:
+				{
+					Order newOrder = createNewOrder();
+					insertOrderWithExtension(newOrder);
+					break;
+				}
+			
+			case 9:
 			    printf("Digite o ID do pedido para remover: ");
 			    scanf("%lld", &inputId);
 			    removeOrder(inputId);
 			    break;
-			case 8:
+			case 10:
 			    printf("Digite o ID do produto para remover: ");
 			    scanf("%lld", &inputId);
 			    removeProduct(inputId);
 			    break;
+			    
+			case 11:
+				reorganizeOrderFile();
+				break;    
 		}
 	} while (option != 0);
 

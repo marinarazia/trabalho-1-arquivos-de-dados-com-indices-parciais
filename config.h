@@ -12,3 +12,6 @@
 #define MAX_CATEGORY_ALIAS 35
 #define USD_DECIMAL 2
 #define ll long long
+#define EXTENSION_AREA_START 1000000
+
+ll currentExtensionId = EXTENSION_AREA_START;
