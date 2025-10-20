@@ -121,15 +121,9 @@ int searchProductById(const ll productId)
             right = mid - 1;
         }
     }
-<<<<<<< HEAD
 
     fseek(dataFile, bestIdx.position, SEEK_SET);
 
-=======
-    
-    fseek(dataFile, prevIdx.segmentBase, SEEK_SET);
-    
->>>>>>> 5b657da8cd3b1f4b87047876a66298b7d9b22d97
     Product p;
     int found = 0;
     long recordsChecked = 0;
@@ -161,11 +155,6 @@ int searchOrdersByUser(const ll userId)
 
     Order o;
     int found = 0;
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 5b657da8cd3b1f4b87047876a66298b7d9b22d97
     while (fread(&o, sizeof(Order), 1, dataFile))
     {
         if (o.userId == userId)
@@ -180,13 +169,8 @@ int searchOrdersByUser(const ll userId)
             found++;
         }
     }
-<<<<<<< HEAD
 
     if (!found)
-=======
-    
-    if (!found) 
->>>>>>> 5b657da8cd3b1f4b87047876a66298b7d9b22d97
     {
         printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
     }

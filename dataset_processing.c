@@ -146,4 +146,3 @@ void convertTextToBinary()
     fclose(products);
     printf("Conversao concluida.\n");
 }
-
