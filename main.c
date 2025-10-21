@@ -17,7 +17,7 @@ TODO:
 
     [x] pesquisa binária
     [x] add elo para inserção por area de extensão
-    [] (Ricardo) função reestruturar indices e arquivo
+    [x] (Ricardo) função reestruturar indices e arquivo
 */
 
 #include <stdio.h>
@@ -30,7 +30,7 @@ TODO:
 #include "partition_merge.c"
 #include "dataset_processing.c"
 #include "search.c"
-#include "insert.c"
+#include "write.c"
 
 Status status = { 0 };
 
