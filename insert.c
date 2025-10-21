@@ -115,6 +115,7 @@ int insertOrderWithExtension(const Order order)
     return 1;
 }
 
+//Todo: insert with extension only
 int insertOrder(const Order order)
 {
     FILE *file = fopen(BIN_ORDER, "ab");
@@ -124,7 +125,6 @@ int insertOrder(const Order order)
     fwrite(&order, sizeof(Order), 1, file);
     fclose(file);
 
-    createIndex();
     return 1;
 }
 
@@ -137,10 +137,6 @@ int insertProduct(const Product product)
     fwrite(&product, sizeof(Product), 1, file);
     fclose(file);
 
-    int tempCount = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct, "temp_products");
-    mergeAllTemps(tempCount, sizeof(Product), compareProduct, "temp_products", BIN_PRODUCT);
-
-    createIndex();
     return 1;
 }
 
@@ -159,7 +155,7 @@ int removeProduct(const ll productId)
 
     while (fread(&p, sizeof(Product), 1, file))
 	{
-        if (p.purchasedProductId == productId && p.active != '0')
+        if (p.id == productId && p.active != '0') 
 		{
             p.active = '0';
             fseek(file, position, SEEK_SET);
@@ -175,7 +171,6 @@ int removeProduct(const ll productId)
     if (found)
 	{
         printf("Produto ID %lld marcado como excluido.\n", productId);
-        createIndex();
         return 1;
     }
 	else
@@ -216,7 +211,6 @@ int removeOrder(const ll orderId)
     if (found)
 	{
         printf("Pedido ID %lld marcado como excluido.\n", orderId);
-        createIndex();
         return 1;
     }
 	else
@@ -252,7 +246,7 @@ Product createNewProduct()
 
     printf("Inserir novo produto:\n");
     printf("ID do produto: ");
-    scanf("%lld", &newProduct.purchasedProductId);
+    scanf("%lld", &newProduct.id);
     printf("ID da categoria: ");
     scanf("%lld", &newProduct.categoryId);
     printf("Alias da categoria: ");

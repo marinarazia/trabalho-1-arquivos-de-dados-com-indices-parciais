@@ -1,4 +1,9 @@
 typedef struct {
+    int modificationsProduct;
+    int modificationsOrder;
+} Status;
+
+typedef struct {
     ll key;
     long segmentBase;
     long position;
@@ -15,7 +20,7 @@ typedef struct {
 } Order;
 
 typedef struct {
-    ll purchasedProductId;
+    ll id;
     ll categoryId;
     ll brandId;
     int price; // em centavos
@@ -25,4 +30,5 @@ typedef struct {
     ll next; // -1 = fim
 } Product;
 
+extern Status status;
 long findOrderPosition(ll orderId);

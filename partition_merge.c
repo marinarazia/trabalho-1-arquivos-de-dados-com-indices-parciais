@@ -1,18 +1,22 @@
 /*
 int compareOrder(const void *a, const void *b);
 int compareProduct(const void *a, const void *b);
-void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile);
+void removeDuplicateProducts(const char *sortedFile);
 
-void mergeAllTemps(int tempCount, size_t recordSize,
+void mergeAllTemps(int tempCount, 
+                   size_t recordSize,
                    int (*comparator)(const void *, const void *),
-                   const char *prefix, const char *finalOutput);
+                   const char *finalOutput);
 
-int mergeTwoTemps(const char *file1, const char *file2, const char *outFile,
-                 size_t recordSize, int (*comparator)(const void *, const void *));
+int mergeTwoTemps(const char *file1, 
+                 const char *file2, 
+                 const char *outFile,
+                 size_t recordSize, 
+                 int (*comparator)(const void *, const void *));
 
-int createSortedTemps(const char *inputFile, size_t recordSize,
-                      int (*comparator)(const void *, const void *),
-                      const char *prefix);
+int createSortedTemps(const char *inputFile, 
+                      size_t recordSize,
+                      int (*comparator)(const void *, const void *))
 */
 
 int compareOrder(const void *a, const void *b)
@@ -28,14 +32,14 @@ int compareProduct(const void *a, const void *b)
 {
     const Product *pa = (const Product *)a;
     const Product *pb = (const Product *)b;
-    if (pa->purchasedProductId < pb->purchasedProductId) return -1;
-    if (pa->purchasedProductId > pb->purchasedProductId) return 1;
+    if (pa->id < pb->id) return -1;
+    if (pa->id > pb->id) return 1;
     return 0;
 }
 
-int createSortedTemps(const char *inputFile, size_t recordSize,
-                      int (*comparator)(const void *, const void *),
-                      const char *prefix)
+int createSortedTemps(const char *inputFile, 
+                      size_t recordSize,
+                      int (*comparator)(const void *, const void *))
 {
     FILE *in = fopen(inputFile, "rb");
     if (!in) { printf("Erro ao abrir %s\n", inputFile); return 0; }
@@ -51,7 +55,7 @@ int createSortedTemps(const char *inputFile, size_t recordSize,
         qsort(buffer, n, recordSize, comparator);
 
         char tempName[64];
-        sprintf(tempName, "%s_%d.bin", prefix, tempCount++);
+        sprintf(tempName, "%s_%d.bin", TEMP_PREFIX, tempCount++);
         FILE *out = fopen(tempName, "wb");
         if (!out) { printf("Erro ao criar %s\n", tempName); break; }
         fwrite(buffer, recordSize, n, out);
@@ -65,8 +69,11 @@ int createSortedTemps(const char *inputFile, size_t recordSize,
     return tempCount;
 }
 
-int mergeTwoTemps(const char *file1, const char *file2, const char *outFile,
-                 size_t recordSize, int (*comparator)(const void *, const void *))
+int mergeTwoTemps(const char *file1, 
+                  const char *file2, 
+                  const char *outFile,
+                  size_t recordSize, 
+                  int (*comparator)(const void *, const void *))
 {
     FILE *f1 = fopen(file1, "rb");
     FILE *f2 = fopen(file2, "rb");
@@ -113,10 +120,11 @@ int mergeTwoTemps(const char *file1, const char *file2, const char *outFile,
     return 1;
 }
 
-void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile)
+void removeDuplicateProducts(const char *sortedFile)
 {
     FILE *in = fopen(sortedFile, "rb");
-    FILE *out = fopen(uniqueFile, "wb");
+    FILE *out = fopen("pruducts_unique.bin", "wb");
+
     if (!in || !out) { printf("Erro ao abrir arquivos!\n"); return; }
 
     Product prev, curr;
@@ -125,7 +133,7 @@ void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile)
         fwrite(&prev, sizeof(Product), 1, out);
         while (fread(&curr, sizeof(Product), 1, in)) 
         {
-            if (curr.purchasedProductId != prev.purchasedProductId)
+            if (curr.id != prev.id)
                 fwrite(&curr, sizeof(Product), 1, out);
 
             prev = curr;
@@ -135,13 +143,14 @@ void removeDuplicateProducts(const char *sortedFile, const char *uniqueFile)
     fclose(in);
     fclose(out);
 
-    rename(uniqueFile, BIN_PRODUCT);
-    printf("Arquivo de produtos unicos criado: %s\n", uniqueFile);
+    rename("pruducts_unique.bin", BIN_PRODUCT);
+    printf("Arquivo de produtos unicos criado: %s\n", "products_unique.bin");
 }
 
-void mergeAllTemps(int tempCount, size_t recordSize,
+void mergeAllTemps(int tempCount, 
+                   size_t recordSize,
                    int (*comparator)(const void *, const void *),
-                   const char *prefix, const char *finalOutput)
+                   const char *finalOutput)
 {
     int pass = 0;
     int current = tempCount;
@@ -156,18 +165,18 @@ void mergeAllTemps(int tempCount, size_t recordSize,
             char file1[64], file2[64], outFile[64];
 
             if (pass == 0)
-                sprintf(file1, "%s_%d.bin", prefix, i);
+                sprintf(file1, "%s_%d.bin", TEMP_PREFIX, i);
             else
-                sprintf(file1, "%s_%d_pass%d.bin", prefix, i, pass);
+                sprintf(file1, "%s_%d_pass%d.bin", TEMP_PREFIX, i, pass);
 
-            sprintf(outFile, "%s_%d_pass%d.bin", prefix, newCount, pass + 1);
+            sprintf(outFile, "%s_%d_pass%d.bin", TEMP_PREFIX, newCount, pass + 1);
 
             if (i + 1 < current)
             {
                 if (pass == 0)
-                    sprintf(file2, "%s_%d.bin", prefix, i + 1);
+                    sprintf(file2, "%s_%d.bin", TEMP_PREFIX, i + 1);
                 else
-                    sprintf(file2, "%s_%d_pass%d.bin", prefix, i + 1, pass);
+                    sprintf(file2, "%s_%d_pass%d.bin", TEMP_PREFIX, i + 1, pass);
 
                 if (!mergeTwoTemps(file1, file2, outFile, recordSize, comparator))
                     printf("Falha ao mesclar %s e %s\n", file1, file2);
@@ -188,7 +197,7 @@ void mergeAllTemps(int tempCount, size_t recordSize,
     }
 
     char finalTemp[64];
-    sprintf(finalTemp, "%s_0_pass%d.bin", prefix, pass);
+    sprintf(finalTemp, "%s_0_pass%d.bin", TEMP_PREFIX, pass);
     rename(finalTemp, finalOutput);
 
     printf("Arquivo final ordenado criado: %s\n", finalOutput);

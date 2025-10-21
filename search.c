@@ -70,7 +70,7 @@ void listProducts(const int limit) {
     	if (p.active == '0') continue;
 
         printf("ProdutoID: %lld | MarcaID: %lld | Preco: %.2f | CategoriaID: %lld | CategoriaAlias: %s | Genero: %c\n",
-               p.purchasedProductId,
+               p.id,
                p.brandId,
                p.price / 100.0,
                p.categoryId,
@@ -131,15 +131,15 @@ int searchProductById(const ll productId)
 	{
 	    if (p.active == '0') continue;
 
-        if (p.purchasedProductId == productId)
+        if (p.id == productId) 
 		{
             printf("Produto encontrado: ID %lld | Preco: %.2f | Categoria: %s\n",
-                   p.purchasedProductId, p.price/100.0, p.categoryAlias);
+                   p.id, p.price/100.0, p.categoryAlias);
             fclose(indexFile);
             fclose(dataFile);
             return 1;
         }
-        if (p.purchasedProductId > productId) break;
+        if (p.id > productId) break;
     }
 
     printf("Produto nao encontrado.\n");
@@ -279,60 +279,4 @@ int searchOrderByIdWithExtension(const ll orderId)
 
     fclose(dataFile);
     return found;
-}
-
-void reorganizeOrderFile()
-{
-    printf("Reorganizando arquivo de pedidos...\n");
-    
-    FILE *oldFile = fopen(BIN_ORDER, "rb");
-    FILE *newFile = fopen("temp_orders_reorg.bin", "wb");
-    
-    if (!oldFile || !newFile) {
-        printf("Erro ao reorganizar arquivo.\n");
-        return;
-    }
-
-    Order o;
-    int i;
-    int count = 0;
-    int movedFromExtension = 0;
-    
-    Order activeOrders[10000]; 
-    int activeCount = 0;
-    
-    while (fread(&o, sizeof(Order), 1, oldFile)) 
-	{
-        if (o.active != '0') 
-		{
-            o.next = -1;
-            activeOrders[activeCount++] = o;
-            
-            if (o.id >= EXTENSION_AREA_START) 
-			{
-                movedFromExtension++;
-            }
-        }
-    }
-
-    qsort(activeOrders, activeCount, sizeof(Order), compareOrder);
-    
-    for (i = 0; i < activeCount; i++) 
-	{
-        fwrite(&activeOrders[i], sizeof(Order), 1, newFile);
-        count++;
-    }
-    
-    fclose(oldFile);
-    fclose(newFile);
-    
-    remove(BIN_ORDER);
-    rename("temp_orders_reorg.bin", BIN_ORDER);
-    
-    currentExtensionId = EXTENSION_AREA_START;
-    
-    printf("Reorganizacao concluida: %d registros, %d movidos da extensao\n", 
-           count, movedFromExtension);
-    
-    createIndex();
 }
