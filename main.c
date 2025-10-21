@@ -50,12 +50,11 @@ int main()
         printf("3  - Pesquisar compras de usuario\n");
         printf("4  - Pesquisar produto por id (busca binaria)\n");
         printf("5  - Pesquisar ordem com elo de extensao (busca binaria)\n");
-        printf("6  - Inserir ordem de compra\n");
-        printf("7  - Inserir produto\n");
-        printf("8  - Inserir ordem com elo de extensao\n");
-        printf("9  - Remover ordem de compra\n");
-        printf("10 - Remover produto\n");
-        printf("11 - Reorganizar arquivo\n");
+        printf("6  - Inserir produto\n");
+        printf("7  - Inserir ordem de compra\n");
+        printf("8  - Remover ordem de compra\n");
+        printf("9  - Remover produto\n");
+        printf("10 - Reorganizar arquivo\n");
         printf("0  - Sair\n");
         printf("Escolha: ");
         scanf("%d", &option);
@@ -88,33 +87,30 @@ int main()
             	printf("Digite o ID do pedido: ");
 			    scanf("%lld", &inputId);
 			    searchOrderByIdWithExtension(inputId);
-            case 6:
+                break;
+			case 6:
+                insertProduct(createNewProduct());
+                status.modificationsProduct++;
+                break;
+			case 7:
                 insertOrder(createNewOrder());
                 status.modificationsOrder++;
                 break;
-			case 7:
-                Product newProduct = createNewProduct();
-                insertProduct(newProduct);
-                status.modificationsProduct++;
-                break;
 			case 8:
-                insertOrderWithExtension(createNewOrder());
-                status.modificationsOrder++;
-                break;
-			case 9:
 			    printf("Digite o ID do pedido para remover: ");
 			    scanf("%lld", &inputId);
 			    removeOrder(inputId);
                 status.modificationsOrder++;
 			    break;
-			case 10:
+			case 9:
 			    printf("Digite o ID do produto para remover: ");
 			    scanf("%lld", &inputId);
 			    removeProduct(inputId);
                 status.modificationsProduct++;
 			    break;
-			case 11:
+			case 10:
 				reorganizeOrderFile();
+				reorganizeProductFile();
 				break;    
 		}
 	} while (option != 0);

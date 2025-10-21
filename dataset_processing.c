@@ -70,7 +70,7 @@ void reorganizeProductFile() {
 
     FILE *oldFile = fopen(BIN_PRODUCT, "rb");
     FILE *newFile = fopen("temp_products_reorg.bin", "wb");
-    if (!oldFile || !newFile)
+    if (!oldFile || !newFile) 
     {
         printf("Erro ao reorganizar arquivo.\n");
         if (oldFile) fclose(oldFile);

@@ -6,7 +6,7 @@ int removeOrder(const ll orderId);
 int insertOrderWithExtension(const Order order);
 */
 
-int insertOrderWithExtension(const Order order)
+int insertOrder(const Order order)
 {
     FILE *file = fopen(BIN_ORDER, "r+b");
     if (!file) return 0;
@@ -115,7 +115,110 @@ int insertOrderWithExtension(const Order order)
     return 1;
 }
 
+int insertProduct(const Product product)
+{
+    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
+    FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
+    if (!dataFile || !indexFile)
+    {
+        if (dataFile) fclose(dataFile);
+        if (indexFile) fclose(indexFile);
+        return 0;
+    }
+
+    Product newProduct = product;
+    newProduct.active = '1';
+    newProduct.next = -1;
+
+    long blockOffset = 0;
+    Index ie;
+    long left = 0, right;
+    long numEntries;
+
+    fseek(indexFile, 0, SEEK_END);
+    numEntries = ftell(indexFile) / sizeof(Index);
+    right = numEntries - 1;
+
+    long candidate = -1;
+    while (left <= right)
+    {
+        long mid = left + (right - left) / 2;
+        fseek(indexFile, mid * sizeof(Index), SEEK_SET);
+        fread(&ie, sizeof(Index), 1, indexFile);
+
+        if (ie.key <= product.id)
+        {
+            candidate = mid;
+            left = mid + 1;
+        }
+        else
+        {
+            right = mid - 1;
+        }
+    }
+
+    blockOffset = 0;
+    if (candidate != -1)
+    {
+        fseek(indexFile, candidate * sizeof(Index), SEEK_SET);
+        fread(&ie, sizeof(Index), 1, indexFile);
+        blockOffset = ie.segmentBase;
+    }
+
+    fseek(dataFile, blockOffset, SEEK_SET);
+    Product current, previous;
+    long currentPos = ftell(dataFile);
+    long previousPos = -1;
+    int inserted = 0;
+
+    while (fread(&current, sizeof(Product), 1, dataFile))
+    {
+        if (current.active == '0')
+        {
+            previousPos = currentPos;
+            currentPos = ftell(dataFile);
+            continue;
+        }
+
+        if (current.id > newProduct.id)
+        {
+            newProduct.id = currentExtensionId++;
+            fseek(dataFile, 0, SEEK_END);
+            long newOffset = ftell(dataFile);
+            fwrite(&newProduct, sizeof(Product), 1, dataFile);
+
+            if (previousPos != -1)
+            {
+                fseek(dataFile, previousPos, SEEK_SET);
+                fread(&previous, sizeof(Product), 1, dataFile);
+                previous.next = newProduct.id;
+                fseek(dataFile, previousPos, SEEK_SET);
+                fwrite(&previous, sizeof(Product), 1, dataFile);
+            }
+
+            inserted = 1;
+            break;
+        }
+
+        previousPos = currentPos;
+        currentPos = ftell(dataFile);
+    }
+
+    if (!inserted)
+    {
+        fseek(dataFile, 0, SEEK_END);
+        fwrite(&newProduct, sizeof(Product), 1, dataFile);
+        printf("Produto ID %lld inserido no final.\n", newProduct.id);
+    }
+
+    fclose(dataFile);
+    fclose(indexFile);
+
+    return 1;
+}
+
 //Todo: insert with extension only
+/*
 int insertOrder(const Order order)
 {
     FILE *file = fopen(BIN_ORDER, "ab");
@@ -139,6 +242,7 @@ int insertProduct(const Product product)
 
     return 1;
 }
+*/
 
 int removeProduct(const ll productId)
 {

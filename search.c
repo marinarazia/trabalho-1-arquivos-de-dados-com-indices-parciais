@@ -5,7 +5,6 @@ int searchProductById(const ll productId);
 int searchOrdersByUser(const ll userId);
 int searchOrderByIdWithExtension(const ll orderId);
 long findOrderPosition(ll orderId);
-void reorganizeOrderFile();
 */
 
 long findOrderPosition(ll orderId)
@@ -54,7 +53,8 @@ void listOrders(const int limit)
     fclose(binOrder);
 }
 
-void listProducts(const int limit) {
+void listProducts(const int limit)
+{
     FILE *binProduct = fopen(BIN_PRODUCT, "rb");
     if (!binProduct)
     {
@@ -207,6 +207,8 @@ int searchOrderByIdWithExtension(const ll orderId)
         {
             found = 1;
             foundPos = mid * sizeof(Order);
+            printf("Pedido ID: %lld | Usuario ID: %lld | Produto ID: %lld | Quantidade: %d" , o.id, o.userId,o.purchasedProductId, o.skuQty);
+            break;
         }
         else if (o.id < orderId)
         {
@@ -273,6 +275,7 @@ int searchOrderByIdWithExtension(const ll orderId)
             else
             {
                 printf("Pedido ID %lld nao encontrado.\n", orderId);
+                break;
             }
         }
     }
