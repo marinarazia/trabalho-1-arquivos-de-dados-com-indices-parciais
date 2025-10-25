@@ -15,100 +15,74 @@ int insertOrder(const Order order)
     newOrder.active = '1';
     newOrder.next = -1;
 
-    if (order.id >= EXTENSION_AREA_START)
-    {
-        fseek(file, 0, SEEK_END);
-        fwrite(&newOrder, sizeof(Order), 1, file);
-        fclose(file);
-        printf("Pedido ID %lld inserido na area de extensao.\n", order.id);
-        return 1;
-    }
+    printf("Tentando inserir pedido ID: %lld\n", order.id);
 
-    Order current, previous;
-    long currentPos = 0, previousPos = -1;
-    int inserted = 0;
+    Order existing, lastInChain;
+    long lastPos = -1;
+    int idExists = 0;
+    
+    fseek(file, 0, SEEK_SET);
+    while (fread(&existing, sizeof(Order), 1, file)) 
+	{
+        if (existing.active != '0' && existing.id == order.id) 
+		{
+            idExists = 1;
+            lastInChain = existing;
+            lastPos = ftell(file) - sizeof(Order);
+            printf("Encontrado ID existente: %lld na posicao %ld\n", existing.id, lastPos);
+            
+            while (lastInChain.next != -1)
+			{
+                printf("Seguindo elo: %lld -> %lld\n", lastInChain.id, lastInChain.next);
 
-    while (fread(&current, sizeof(Order), 1, file))
-    {
-        if (current.active == '0')
-        {
-            currentPos = ftell(file);
-            continue;
-        }
-
-        if (current.id > order.id)
-        {
-            if (previousPos == -1)
-            {
                 fseek(file, 0, SEEK_SET);
-            }
-            else
-            {
-                fseek(file, previousPos, SEEK_SET);
-                fread(&previous, sizeof(Order), 1, file);
-
-                if (previous.next != -1)
-                {
-                    long extensionPos = ftell(file);
-                    Order extension;
-                    while (previous.next != -1)
-                    {
-                        extensionPos = findOrderPosition(previous.next);
-                        if (extensionPos == -1) break;
-
-                        fseek(file, extensionPos, SEEK_SET);
-                        fread(&extension, sizeof(Order), 1, file);
-                        previous = extension;
+                int foundNext = 0;
+                Order nextOrder;
+                while (fread(&nextOrder, sizeof(Order), 1, file)) 
+				{
+                    if (nextOrder.active != '0' && nextOrder.id == lastInChain.next) 
+					{
+                        lastInChain = nextOrder;
+                        lastPos = ftell(file) - sizeof(Order);
+                        foundNext = 1;
+                        printf("Encontrado proximo elo: %lld\n", lastInChain.id);
+                        break;
                     }
-
-                    newOrder.id = currentExtensionId++;
-                    fseek(file, 0, SEEK_END);
-                    long newPos = ftell(file);
-                    fwrite(&newOrder, sizeof(Order), 1, file);
-
-                    previous.next = newOrder.id;
-                    fseek(file, extensionPos, SEEK_SET);
-                    fwrite(&previous, sizeof(Order), 1, file);
-
-                    inserted = 1;
-                    break;
                 }
-                else
-                {
-                    newOrder.id = currentExtensionId++;
-                    fseek(file, 0, SEEK_END);
-                    long newPos = ftell(file);
-                    fwrite(&newOrder, sizeof(Order), 1, file);
-
-                    previous.next = newOrder.id;
-                    fseek(file, previousPos, SEEK_SET);
-                    fwrite(&previous, sizeof(Order), 1, file);
-
-                    inserted = 1;
+                
+                if (!foundNext) {
+                    printf("Elo %lld nao encontrado, parando cadeia.\n", lastInChain.next);
                     break;
                 }
             }
-
-            if (!inserted)
-            {
-                newOrder.id = currentExtensionId++;
-                fseek(file, 0, SEEK_END);
-                fwrite(&newOrder, sizeof(Order), 1, file);
-                inserted = 1;
-            }
-            break;
         }
-
-        previous = current;
-        previousPos = currentPos;
-        currentPos = ftell(file);
     }
 
-    if (!inserted) 
+    if (idExists) 
+	{
+        printf("ID %lld ja existe. ", order.id);
+        printf("Ultimo da cadeia: ID %lld (next=%lld)\n", lastInChain.id, lastInChain.next);
+        
+        Order extensionOrder = newOrder;
+        extensionOrder.id = currentExtensionId++; 
+        extensionOrder.next = -1; 
+        
+        fseek(file, 0, SEEK_END);
+        long extensionPos = ftell(file);
+        fwrite(&extensionOrder, sizeof(Order), 1, file);
+        printf("Novo registro de extensao criado: ID %lld\n", extensionOrder.id);
+        
+        lastInChain.next = extensionOrder.id;
+        fseek(file, lastPos, SEEK_SET);
+        fwrite(&lastInChain, sizeof(Order), 1, file);
+        
+        printf("Elo criado: %lld -> %lld\n", lastInChain.id, extensionOrder.id);
+    } 
+	else 
 	{
         fseek(file, 0, SEEK_END);
         fwrite(&newOrder, sizeof(Order), 1, file);
-        printf("Pedido ID %lld inserido no final.\n", order.id);
+        printf("Pedido ID %lld inserido normalmente (sem elo).\n", order.id);
     }
 
     fclose(file);
@@ -117,103 +91,57 @@ int insertOrder(const Order order)
 
 int insertProduct(const Product product)
 {
-    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
-    FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
-    if (!dataFile || !indexFile)
-    {
-        if (dataFile) fclose(dataFile);
-        if (indexFile) fclose(indexFile);
-        return 0;
-    }
+    FILE *file = fopen(BIN_PRODUCT, "r+b");
+    if (!file) return 0;
 
     Product newProduct = product;
     newProduct.active = '1';
     newProduct.next = -1;
 
-    long blockOffset = 0;
-    Index ie;
-    long left = 0, right;
-    long numEntries;
+    printf("Inserindo produto ID: %lld\n", product.id);
 
-    fseek(indexFile, 0, SEEK_END);
-    numEntries = ftell(indexFile) / sizeof(Index);
-    right = numEntries - 1;
-
-    long candidate = -1;
-    while (left <= right)
-    {
-        long mid = left + (right - left) / 2;
-        fseek(indexFile, mid * sizeof(Index), SEEK_SET);
-        fread(&ie, sizeof(Index), 1, indexFile);
-
-        if (ie.key <= product.id)
-        {
-            candidate = mid;
-            left = mid + 1;
-        }
-        else
-        {
-            right = mid - 1;
-        }
-    }
-
-    blockOffset = 0;
-    if (candidate != -1)
-    {
-        fseek(indexFile, candidate * sizeof(Index), SEEK_SET);
-        fread(&ie, sizeof(Index), 1, indexFile);
-        blockOffset = ie.segmentBase;
-    }
-
-    fseek(dataFile, blockOffset, SEEK_SET);
-    Product current, previous;
-    long currentPos = ftell(dataFile);
-    long previousPos = -1;
-    int inserted = 0;
-
-    while (fread(&current, sizeof(Product), 1, dataFile))
-    {
-        if (current.active == '0')
-        {
-            previousPos = currentPos;
-            currentPos = ftell(dataFile);
-            continue;
-        }
-
-        if (current.id > newProduct.id)
-        {
-            newProduct.id = currentExtensionId++;
-            fseek(dataFile, 0, SEEK_END);
-            long newOffset = ftell(dataFile);
-            fwrite(&newProduct, sizeof(Product), 1, dataFile);
-
-            if (previousPos != -1)
-            {
-                fseek(dataFile, previousPos, SEEK_SET);
-                fread(&previous, sizeof(Product), 1, dataFile);
-                previous.next = newProduct.id;
-                fseek(dataFile, previousPos, SEEK_SET);
-                fwrite(&previous, sizeof(Product), 1, dataFile);
-            }
-
-            inserted = 1;
+    Product existing;
+    int idExists = 0;
+    long existingPos = -1;
+    
+    fseek(file, 0, SEEK_SET);
+    while (fread(&existing, sizeof(Product), 1, file)) 
+	{
+        if (existing.active != '0' && existing.id == product.id) 
+		{
+            idExists = 1;
+            existingPos = ftell(file) - sizeof(Product);
             break;
         }
-
-        previousPos = currentPos;
-        currentPos = ftell(dataFile);
     }
 
-    if (!inserted)
-    {
-        fseek(dataFile, 0, SEEK_END);
-        fwrite(&newProduct, sizeof(Product), 1, dataFile);
-        printf("Produto ID %lld inserido no final.\n", newProduct.id);
+    if (idExists) 
+	{
+        printf("ID %lld ja existe.", product.id);
+        
+        Product extensionProduct = newProduct;
+        extensionProduct.id = currentExtensionId++; 
+        extensionProduct.next = -1;
+        
+        fseek(file, 0, SEEK_END);
+        long newPos = ftell(file);
+        fwrite(&extensionProduct, sizeof(Product), 1, file);
+        
+        existing.next = extensionProduct.id;
+        fseek(file, existingPos, SEEK_SET);
+        fwrite(&existing, sizeof(Product), 1, file);
+        
+        printf("Elo criado: %lld -> %lld\n", existing.id, extensionProduct.id);
+        
+    } 
+	else 
+	{
+        fseek(file, 0, SEEK_END);
+        fwrite(&newProduct, sizeof(Product), 1, file);
+        printf("Produto ID %lld inserido normalmente.\n", product.id);
     }
 
-    fclose(dataFile);
-    fclose(indexFile);
-
+    fclose(file);
     return 1;
 }
 
@@ -347,7 +275,8 @@ Order createNewOrder()
 Product createNewProduct()
 {
     Product newProduct;
-
+	float price;
+	
     printf("Inserir novo produto:\n");
     printf("ID do produto: ");
     scanf("%lld", &newProduct.id);
@@ -358,13 +287,14 @@ Product createNewProduct()
     printf("ID da marca: ");
     scanf("%lld", &newProduct.brandId);
     printf("Preco (ex: 29.99): ");
-    float price;
     scanf("%f", &price);
     newProduct.price = (int)(price * 100);
+    getchar();
     printf("Genero (M/F/U): ");
     scanf(" %c", &newProduct.productGender);
 
     newProduct.active = '1';
+    newProduct.next = -1;
 
     return newProduct;
 }

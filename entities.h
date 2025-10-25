@@ -31,4 +31,5 @@ typedef struct {
 } Product;
 
 extern Status status;
+extern ll currentExtensionId;
 long findOrderPosition(ll orderId);

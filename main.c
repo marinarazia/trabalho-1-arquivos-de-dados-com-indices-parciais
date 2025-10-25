@@ -33,6 +33,7 @@ TODO:
 #include "write.c"
 
 Status status = { 0 };
+ll currentExtensionId = EXTENSION_AREA_START;
 
 void setupFiles(); 
 
@@ -48,8 +49,8 @@ int main()
         printf("1  - Listar ordens de compra\n");
         printf("2  - Listar produtos\n");
         printf("3  - Pesquisar compras de usuario\n");
-        printf("4  - Pesquisar produto por id (busca binaria)\n");
-        printf("5  - Pesquisar ordem com elo de extensao (busca binaria)\n");
+        printf("4  - Pesquisar produto por id\n");
+        printf("5  - Pesquisar ordem por id\n");
         printf("6  - Inserir produto\n");
         printf("7  - Inserir ordem de compra\n");
         printf("8  - Remover ordem de compra\n");
@@ -72,7 +73,7 @@ int main()
         switch (option) 
         {
             case 1: listOrders(10); break;
-            case 2: listProducts(10); break;
+            case 2: listProducts(10000); break;
             case 3:
                 printf("Digite o ID do usuario: ");
                 scanf("%lld", &inputId);
@@ -81,7 +82,7 @@ int main()
             case 4:
                 printf("Digite o ID do produto: ");
                 scanf("%lld", &inputId);
-                searchProductById(inputId);
+            	searchProductById(inputId);
                 break;
             case 5:
             	printf("Digite o ID do pedido: ");

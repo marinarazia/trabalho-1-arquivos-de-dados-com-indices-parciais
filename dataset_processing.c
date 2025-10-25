@@ -5,7 +5,7 @@ int createIndex(const char *dataFile,
                 const char *indexFile, 
                 size_t recordSize)
 
-//converte csv para binário
+//converte csv para binario
 void convertTextToBinary()
 
 //restrutura dataset de acordo com função comparator
