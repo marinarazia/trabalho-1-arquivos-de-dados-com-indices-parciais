@@ -1,4 +1,5 @@
 /*
+int fseekBlockOffset(FILE* dataFile, FILE* indexFile, const ll id)
 void listOrders(const int limit);
 void listProducts(const int limit);
 int searchProductById(const ll productId);
@@ -6,6 +7,46 @@ int searchOrdersByUser(const ll userId);
 int searchOrderByIdWithExtension(const ll orderId);
 long findOrderPosition(ll orderId);
 */
+
+int fseekBlockOffset(FILE* dataFile, FILE* indexFile, const ll id)
+{
+    long blockOffset = 0;
+    Index ie;
+    long left = 0, right;
+    long numEntries;
+
+    fseek(indexFile, 0, SEEK_END);
+    numEntries = ftell(indexFile) / sizeof(Index);
+    right = numEntries - 1;
+
+    long candidate = -1;
+    while (left <= right)
+    {
+        long mid = left + (right - left) / 2;
+        fseek(indexFile, mid * sizeof(Index), SEEK_SET);
+        fread(&ie, sizeof(Index), 1, indexFile);
+
+        if (ie.key <= id)
+        {
+            candidate = mid;
+            left = mid + 1;
+        }
+        else
+        {
+            right = mid - 1;
+        }
+    }
+
+    if (candidate != -1)
+    {
+        fseek(indexFile, candidate * sizeof(Index), SEEK_SET);
+        fread(&ie, sizeof(Index), 1, indexFile);
+        blockOffset = ie.position;
+    }
+
+    fseek(dataFile, blockOffset, SEEK_SET);
+}
+
 
 long findOrderPosition(ll orderId)
 {
@@ -45,10 +86,17 @@ void listOrders(const int limit)
         struct tm *tm_info = localtime(&o.dateTime);
         strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
 
-        printf("ID: %lld | ProdutoID: %lld | UsuarioID: %lld | Qtd: %d | Data: %s\n",
-               o.id, o.purchasedProductId, o.userId, o.skuQty, buffer);
+        printf("ID: %lld | ProdutoID: %lld | UsuarioID: %lld | Qtd: %d | Data: %s | Elo: %lld \n", 
+               o.id, 
+               o.purchasedProductId, 
+               o.userId, 
+               o.skuQty, 
+               buffer, 
+               o.next);
 
+        #ifndef DEBUG
         if (limit && ++count >= limit) break;
+        #endif
     }
     fclose(binOrder);
 }
@@ -69,51 +117,52 @@ void listProducts(const int limit)
     {
     	if (p.active == '0') continue;
 
-        printf("ProdutoID: %lld | MarcaID: %lld | Preco: %.2f | CategoriaID: %lld | CategoriaAlias: %s | Genero: %c\n",
+        printf("ProdutoID: %lld | MarcaID: %lld | Preco: %.2f | CategoriaID: %lld | CategoriaAlias: %s | Genero: %c | Elo: %lld\n",
                p.id,
                p.brandId,
-               p.price / 100.0,
+               p.price * 100.0,
                p.categoryId,
                p.categoryAlias,
-               p.productGender);
+               p.productGender,
+               p.next);
 
+        #ifndef DEBUG
         if (limit && ++count >= limit) break;
+        #endif
     }
     fclose(binProduct);
 }
 
-int searchProductById(const ll productId)
+int searchProductById(const ll product)
 {
+    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
     FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
-    FILE *dataFile = fopen(BIN_PRODUCT, "rb");
+    if (!dataFile || !indexFile)
+    {
+        if (dataFile) fclose(dataFile);
+        if (indexFile) fclose(indexFile);
+        return 0;
+    }
 
-    if (!indexFile || !dataFile) return 0;
+    long blockOffset = 0;
+    Index ie;
+    long left = 0, right;
+    long numEntries;
 
     fseek(indexFile, 0, SEEK_END);
-    long indexSize = ftell(indexFile);
-    long numIndexEntries = indexSize / sizeof(Index);
+    numEntries = ftell(indexFile) / sizeof(Index);
+    right = numEntries - 1;
 
-    long left = 0;
-    long right = numIndexEntries - 1;
-    long mid;
-    Index idx;
-    Index bestIdx = {0, 0};
-
+    long candidate = -1;
     while (left <= right)
     {
-        mid = left + (right - left) / 2;
-
+        long mid = left + (right - left) / 2;
         fseek(indexFile, mid * sizeof(Index), SEEK_SET);
-        fread(&idx, sizeof(Index), 1, indexFile);
+        fread(&ie, sizeof(Index), 1, indexFile);
 
-        if (idx.key == productId)
+        if (ie.key <= product)
         {
-            bestIdx = idx;
-            break;
-        }
-        else if (idx.key < productId)
-        {
-            bestIdx = idx;
+            candidate = mid;
             left = mid + 1;
         }
         else
@@ -122,30 +171,68 @@ int searchProductById(const ll productId)
         }
     }
 
-    fseek(dataFile, bestIdx.position, SEEK_SET);
-
-    Product p;
-    int found = 0;
-    long recordsChecked = 0;
-    while (fread(&p, sizeof(Product), 1, dataFile) && recordsChecked < SEGMENT_SIZE)
-	{
-	    if (p.active == '0') continue;
-
-        if (p.id == productId) 
-		{
-            printf("Produto encontrado: ID %lld | Preco: %.2f | Categoria: %s\n",
-                   p.id, p.price/100.0, p.categoryAlias);
-            fclose(indexFile);
-            fclose(dataFile);
-            return 1;
-        }
-        if (p.id > productId) break;
+    blockOffset = 0;
+    if (candidate != -1)
+    {
+        fseek(indexFile, candidate * sizeof(Index), SEEK_SET);
+        fread(&ie, sizeof(Index), 1, indexFile);
+        blockOffset = ie.position;
     }
 
-    printf("Produto nao encontrado.\n");
-    fclose(indexFile);
+    fseek(dataFile, blockOffset, SEEK_SET);
+    Product current, previous;
+    long currentPos = ftell(dataFile);
+    long previousPos = -1;
+    int found = -1;
+
+    while (fread(&current, sizeof(Product), 1, dataFile))
+    {
+        if (current.active == '0')
+        {
+            previousPos = currentPos;
+            currentPos = ftell(dataFile);
+            continue;
+        }
+
+        if (current.id == product)
+        {
+            found = 1;
+            break;
+        }
+
+        if (current.id > product) 
+        {
+            fseek(dataFile, previousPos, SEEK_SET);
+            fseek(dataFile, previous.next, SEEK_SET);;
+            fread(&current, sizeof(Product), 1, dataFile);
+
+            while (current.id != product && current.next != -1)
+            {
+                fseek(dataFile, current.next, SEEK_SET);;
+                fread(&current, sizeof(Product), 1, dataFile);
+            }
+
+            if (current.id == product)
+            {
+                found = 1;
+            }
+
+            break;
+        }
+
+        previousPos = currentPos;
+        currentPos = ftell(dataFile);
+    }
+
+    if (found)
+    {
+        printf("ACHOU");
+    }
+
     fclose(dataFile);
-    return 0;
+    fclose(indexFile);
+
+    return 1;
 }
 
 int searchOrdersByUser(const ll userId)

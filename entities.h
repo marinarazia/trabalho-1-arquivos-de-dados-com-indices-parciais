@@ -1,11 +1,11 @@
 typedef struct {
     int modificationsProduct;
     int modificationsOrder;
+    ll currentExtensionId;
 } Status;
 
 typedef struct {
     ll key;
-    long segmentBase;
     long position;
 } Index;
 

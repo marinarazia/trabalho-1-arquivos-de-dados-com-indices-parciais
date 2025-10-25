@@ -18,6 +18,9 @@ TODO:
     [x] pesquisa binária
     [x] add elo para inserção por area de extensão
     [x] (Ricardo) função reestruturar indices e arquivo
+    []corrigir inserção e pesquisa
+    []data e hora
+    []revisar reorganize file
 */
 
 #include <stdio.h>
@@ -37,7 +40,7 @@ Status status = { 0 };
 void setupFiles(); 
 
 int main() 
-{
+    {
     int option;
     ll inputId;
 
@@ -143,6 +146,7 @@ void setupFiles()
         binStatus = fopen(BIN_STATUS, "wb");
         if (binStatus)
         {
+            status.currentExtensionId = EXTENSION_AREA_START;
             fwrite(&status, sizeof(Status), 1, binStatus);
             fclose(binStatus);
         }
@@ -152,11 +156,11 @@ void setupFiles()
     {
         convertTextToBinary();
 
-        int productTemps = createSortedTemps(BIN_ORDER, sizeof(Order), compareOrder);
-        mergeAllTemps(productTemps, sizeof(Order), compareOrder, BIN_ORDER);
+        int orderTmps = createSortedTemps(BIN_ORDER, sizeof(Order), compareOrder);
+        mergeAllTemps(orderTmps, sizeof(Order), compareOrder, BIN_ORDER);
 
-        int orderTemps = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct);
-        mergeAllTemps(orderTemps, sizeof(Product), compareProduct, BIN_PRODUCT);
+        int productTmps = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct);
+        mergeAllTemps(productTmps, sizeof(Product), compareProduct, BIN_PRODUCT);
         removeDuplicateProducts(BIN_PRODUCT);
 
         createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
