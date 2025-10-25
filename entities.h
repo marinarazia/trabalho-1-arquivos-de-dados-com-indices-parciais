@@ -1,12 +1,12 @@
 typedef struct {
     int modificationsProduct;
     int modificationsOrder;
+    ll currentExtensionId;
 } Status;
 
 typedef struct {
-    ll key;
-    long segmentBase;
-    long position;
+    ll id; // id of last record in the segment
+    long position; // segment start position
 } Index;
 
 typedef struct {
@@ -31,5 +31,3 @@ typedef struct {
 } Product;
 
 extern Status status;
-extern ll currentExtensionId;
-long findOrderPosition(ll orderId);

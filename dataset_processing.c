@@ -1,19 +1,7 @@
 /*
-
-//cria arquivos de indice por Id do struct
-int createIndex(const char *dataFile, 
-                const char *indexFile, 
-                size_t recordSize)
-
-//converte csv para binario
+int createIndex(const char *dataFile, const char *indexFile, size_t recordSize)
 void convertTextToBinary()
-
-//restrutura dataset de acordo com função comparator
-int restructureDataset(const char* dataFile,
-                       const char* indexFile,
-                       size_t recordSize,
-                       int (*comparator)(const void*, const void*))
-
+void reorganizeOrderFile()
 void reorganizeProductFile()
 */
 
@@ -41,20 +29,30 @@ int createIndex(const char *dataFile,
         return 0;
     }
 
-    long pos = 0;
+    long segmentStart = 0;
     int count = 0;
+
+    ll lastId = -1;
 
     while (fread(record, recordSize, 1, data) == 1)
     {
+        ll id = *(ll *)record;
+        lastId = id;
+        count++;
+
         if (count % SEGMENT_SIZE == 0)
         {
-            long long id = *(long long *)((char *)record + sizeof(ll));
-            Index idx = { id, pos };
+            Index idx = { lastId, segmentStart };
             fwrite(&idx, sizeof(Index), 1, index);
-        }
 
-        pos = ftell(data);
-        count++;
+            segmentStart = ftell(data);
+        }
+    }
+
+    if (count % SEGMENT_SIZE != 0)
+    {
+        Index idx = { lastId, segmentStart };
+        fwrite(&idx, sizeof(Index), 1, index);
     }
 
     free(record);
@@ -65,7 +63,8 @@ int createIndex(const char *dataFile,
     return 1;
 }
 
-void reorganizeProductFile() {
+void reorganizeProductFile() 
+{
     printf("Reorganizando arquivo de produtos...\n");
 
     FILE *oldFile = fopen(BIN_PRODUCT, "rb");
@@ -84,15 +83,15 @@ void reorganizeProductFile() {
         if (p.active == '0') continue;
 
         long next = p.next;
-        p.next = 0;
+        p.next = -1;
         fwrite(&p, sizeof(Product), 1, newFile);
 
-        while (next != 0)
+        while (next != -1)
         {
             fseek(oldFile, next, SEEK_SET);
             fread(&p, sizeof(Product), 1, oldFile);
             next = p.next;
-            p.next = 0;
+            p.next = -1;
             if (p.active == '0') continue;
             fwrite(&p, sizeof(Product), 1, newFile);
         }
@@ -104,8 +103,8 @@ void reorganizeProductFile() {
     remove(BIN_PRODUCT);
     rename("temp_products_reorg.bin", BIN_PRODUCT);
 
-    currentExtensionId = EXTENSION_AREA_START;
-
+    status.currentExtensionId = EXTENSION_AREA_START;
+    status.modificationsProduct = 0;
     FILE *statusFile = fopen(BIN_STATUS, "wb");
     if (statusFile)
     {
@@ -116,7 +115,8 @@ void reorganizeProductFile() {
     createIndex(BIN_PRODUCT, INDEX_PRODUCT, sizeof(Product));
 }
 
-void reorganizeOrderFile() {
+void reorganizeOrderFile() 
+{
     printf("Reorganizando arquivo de pedidos...\n");
 
     FILE *oldFile = fopen(BIN_ORDER, "rb");
@@ -136,16 +136,16 @@ void reorganizeOrderFile() {
         if (o.active == '0') continue;
 
         long next = o.next;
-        o.next = 0;
+        o.next = -1;
         fwrite(&o, sizeof(Order), 1, newFile);
 
-        while (next != 0)
+        while (next != -1)
         {
             fseek(oldFile, next, SEEK_SET);
             fread(&o, sizeof(Order), 1, oldFile);
 
             next = o.next;
-            o.next = 0;
+            o.next = -1;
 
             if (o.active == '0') continue;
 
@@ -159,8 +159,8 @@ void reorganizeOrderFile() {
     remove(BIN_ORDER);
     rename("temp_orders_reorg.bin", BIN_ORDER);
 
-    currentExtensionId = EXTENSION_AREA_START;
-
+    status.currentExtensionId = EXTENSION_AREA_START;
+    status.modificationsOrder = 0;
     FILE *statusFile = fopen(BIN_STATUS, "wb");
     if (statusFile)
     {
@@ -169,8 +169,6 @@ void reorganizeOrderFile() {
     }
 
     createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
-
-    printf("Reorganização de pedidos concluída.\n");
 }
 
 void convertTextToBinary() 
@@ -226,13 +224,17 @@ void convertTextToBinary()
         o.purchasedProductId = strlen(cols[2]) ? atoll(cols[2]) : -1;
         o.skuQty = strlen(cols[3]) ? atoi(cols[3]) : -1;
         o.userId = strlen(cols[8]) ? atoll(cols[8]) : -1;
+        o.next = -1;
 
+        //product
         p.categoryId = strlen(cols[4]) ? atoll(cols[4]) : -1;
         strncpy(p.categoryAlias, cols[5], MAX_CATEGORY_ALIAS-1);
         p.brandId = strlen(cols[6]) ? atoll(cols[6]) : -1;
         float priceFloat = strlen(cols[7]) ? atof(cols[7]) : 0.0f;
-        p.price = (int)(priceFloat * 10 * USD_DECIMAL);
+        p.price = (int)(priceFloat * 100);
         p.productGender = strlen(cols[9]) ? cols[9][0] : ' ';
+        p.id = o.purchasedProductId;
+        p.next = -1;
 
         struct tm tm = {0};
         int y,m,d,H,M,S;
@@ -248,8 +250,6 @@ void convertTextToBinary()
             tm.tm_sec = S;
             o.dateTime = mktime(&tm);
         }
-
-        p.id = o.purchasedProductId;
 
         fwrite(&o, sizeof(Order), 1, orders);
         fwrite(&p, sizeof(Product), 1, products);

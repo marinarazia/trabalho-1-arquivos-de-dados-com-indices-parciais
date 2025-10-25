@@ -3,10 +3,9 @@ int insertOrder(const Order order);
 int insertProduct(const Product product);
 int removeProduct(const ll productId);
 int removeOrder(const ll orderId);
-int insertOrderWithExtension(const Order order);
 */
 
-int insertOrder(const Order order)
+int insertOrder(Order order)
 {
     FILE *file = fopen(BIN_ORDER, "r+b");
     if (!file) return 0;
@@ -64,11 +63,10 @@ int insertOrder(const Order order)
         printf("Ultimo da cadeia: ID %lld (next=%lld)\n", lastInChain.id, lastInChain.next);
         
         Order extensionOrder = newOrder;
-        extensionOrder.id = currentExtensionId++; 
+        extensionOrder.id = status.currentExtensionId++; 
         extensionOrder.next = -1; 
         
         fseek(file, 0, SEEK_END);
-        long extensionPos = ftell(file);
         fwrite(&extensionOrder, sizeof(Order), 1, file);
         printf("Novo registro de extensao criado: ID %lld\n", extensionOrder.id);
         
@@ -89,14 +87,10 @@ int insertOrder(const Order order)
     return 1;
 }
 
-int insertProduct(const Product product)
+int insertProduct(Product product)
 {
     FILE *file = fopen(BIN_PRODUCT, "r+b");
     if (!file) return 0;
-
-    Product newProduct = product;
-    newProduct.active = '1';
-    newProduct.next = -1;
 
     printf("Inserindo produto ID: %lld\n", product.id);
 
@@ -119,12 +113,11 @@ int insertProduct(const Product product)
 	{
         printf("ID %lld ja existe.", product.id);
         
-        Product extensionProduct = newProduct;
-        extensionProduct.id = currentExtensionId++; 
+        Product extensionProduct = product;
+        extensionProduct.id = status.currentExtensionId++; 
         extensionProduct.next = -1;
         
         fseek(file, 0, SEEK_END);
-        long newPos = ftell(file);
         fwrite(&extensionProduct, sizeof(Product), 1, file);
         
         existing.next = extensionProduct.id;
@@ -137,40 +130,13 @@ int insertProduct(const Product product)
 	else 
 	{
         fseek(file, 0, SEEK_END);
-        fwrite(&newProduct, sizeof(Product), 1, file);
+        fwrite(&product, sizeof(Product), 1, file);
         printf("Produto ID %lld inserido normalmente.\n", product.id);
     }
 
     fclose(file);
     return 1;
 }
-
-//Todo: insert with extension only
-/*
-int insertOrder(const Order order)
-{
-    FILE *file = fopen(BIN_ORDER, "ab");
-    if (!file) return 0;
-
-    fseek(file, 0, SEEK_END);
-    fwrite(&order, sizeof(Order), 1, file);
-    fclose(file);
-
-    return 1;
-}
-
-int insertProduct(const Product product)
-{
-    FILE *file = fopen(BIN_PRODUCT, "ab");
-    if (!file) return 0;
-
-    fseek(file, 0, SEEK_END);
-    fwrite(&product, sizeof(Product), 1, file);
-    fclose(file);
-
-    return 1;
-}
-*/
 
 int removeProduct(const ll productId)
 {
@@ -240,7 +206,7 @@ int removeOrder(const ll orderId)
 
     fclose(file);
 
-    if (found)
+        if (found)
 	{
         printf("Pedido ID %lld marcado como excluido.\n", orderId);
         return 1;
@@ -268,6 +234,7 @@ Order createNewOrder()
 
     newOrder.dateTime = time(NULL);
     newOrder.active = '1';
+    newOrder.next = -1;
 
     return newOrder;
 }

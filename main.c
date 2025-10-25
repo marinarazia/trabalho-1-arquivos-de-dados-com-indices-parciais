@@ -2,22 +2,6 @@
 Integrantes: Ricardo Alberti, Marina Razia Goulart Pacheco
 
 Comando para compilar: gcc main.c
-
-TODO: 
-    [x] arquivo de dados para binario
-    [x] arquivo de dados ordenado
-    [x] funcao criar arquivo indice parcial
-    [x] arquivo de dados produtos distintos
-
-    [x] listagem dos dados
-    [x] funcoes de consulta
-    [x] funcoes de remocao
-    [x] funcoes de insercao
-    [x] completar switch no main 
-
-    [x] pesquisa binária
-    [x] add elo para inserção por area de extensão
-    [x] (Ricardo) função reestruturar indices e arquivo
 */
 
 #include <stdio.h>
@@ -27,18 +11,18 @@ TODO:
 
 #include "config.h"
 #include "entities.h"
+#include "helper.c"
 #include "partition_merge.c"
 #include "dataset_processing.c"
 #include "search.c"
 #include "write.c"
 
 Status status = { 0 };
-ll currentExtensionId = EXTENSION_AREA_START;
 
 void setupFiles(); 
 
 int main() 
-{
+    {
     int option;
     ll inputId;
 
@@ -73,7 +57,7 @@ int main()
         switch (option) 
         {
             case 1: listOrders(10); break;
-            case 2: listProducts(10000); break;
+            case 2: listProducts(10); break;
             case 3:
                 printf("Digite o ID do usuario: ");
                 scanf("%lld", &inputId);
@@ -87,7 +71,7 @@ int main()
             case 5:
             	printf("Digite o ID do pedido: ");
 			    scanf("%lld", &inputId);
-			    searchOrderByIdWithExtension(inputId);
+			    searchOrderById(inputId);
                 break;
 			case 6:
                 insertProduct(createNewProduct());
@@ -144,6 +128,7 @@ void setupFiles()
         binStatus = fopen(BIN_STATUS, "wb");
         if (binStatus)
         {
+            status.currentExtensionId = EXTENSION_AREA_START;
             fwrite(&status, sizeof(Status), 1, binStatus);
             fclose(binStatus);
         }
@@ -153,11 +138,11 @@ void setupFiles()
     {
         convertTextToBinary();
 
-        int productTemps = createSortedTemps(BIN_ORDER, sizeof(Order), compareOrder);
-        mergeAllTemps(productTemps, sizeof(Order), compareOrder, BIN_ORDER);
+        int orderTmps = createSortedTemps(BIN_ORDER, sizeof(Order), compareOrder);
+        mergeAllTemps(orderTmps, sizeof(Order), compareOrder, BIN_ORDER);
 
-        int orderTemps = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct);
-        mergeAllTemps(orderTemps, sizeof(Product), compareProduct, BIN_PRODUCT);
+        int productTmps = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct);
+        mergeAllTemps(productTmps, sizeof(Product), compareProduct, BIN_PRODUCT);
         removeDuplicateProducts(BIN_PRODUCT);
 
         createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
