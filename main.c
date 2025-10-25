@@ -1,7 +1,9 @@
 /*
+
 Integrantes: Ricardo Alberti, Marina Razia Goulart Pacheco
 
 Comando para compilar: gcc main.c
+
 */
 
 #include <stdio.h>
@@ -22,7 +24,7 @@ Status status = { 0 };
 void setupFiles(); 
 
 int main() 
-    {
+{
     int option;
     ll inputId;
 
@@ -45,19 +47,10 @@ int main()
         scanf("%d", &option);
         getchar();
 
-        if (status.modificationsOrder > MAX_MODIFICATIONS)
-        {
-            reorganizeOrderFile();
-        }
-        else if (status.modificationsProduct > MAX_MODIFICATIONS)
-        {
-            reorganizeProductFile();
-        }
-
         switch (option) 
         {
-            case 1: listOrders(10); break;
-            case 2: listProducts(10); break;
+            case 1: listOrders(0); break;
+            case 2: listProducts(0); break;
             case 3:
                 printf("Digite o ID do usuario: ");
                 scanf("%lld", &inputId);
@@ -74,11 +67,11 @@ int main()
 			    searchOrderById(inputId);
                 break;
 			case 6:
-                insertProduct(createNewProduct());
+                insert(BIN_PRODUCT, INDEX_PRODUCT, createNewProduct(), sizeof(Product));
                 status.modificationsProduct++;
                 break;
 			case 7:
-                insertOrder(createNewOrder());
+                insert(BIN_ORDER, INDEX_ORDER, createNewOrder(), sizeof(Order));
                 status.modificationsOrder++;
                 break;
 			case 8:
@@ -128,7 +121,6 @@ void setupFiles()
         binStatus = fopen(BIN_STATUS, "wb");
         if (binStatus)
         {
-            status.currentExtensionId = EXTENSION_AREA_START;
             fwrite(&status, sizeof(Status), 1, binStatus);
             fclose(binStatus);
         }

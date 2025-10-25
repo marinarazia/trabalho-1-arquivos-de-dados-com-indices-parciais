@@ -54,6 +54,11 @@ int searchOrdersByUser(const ll userId)
     FILE *dataFile = fopen(BIN_ORDER, "rb");
     if (!dataFile) return 0;
 
+    if (status.modificationsOrder)
+    {
+        reorganizeOrderFile();
+    }
+
     Order o;
     int found = 0;
     while (fread(&o, sizeof(Order), 1, dataFile))
@@ -70,14 +75,28 @@ int searchOrdersByUser(const ll userId)
         printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
     }
 
+
     fclose(dataFile);
     return found;
 }
 
 int searchProductById(const ll productId)
 {
-    FILE *dataFile = fopen(BIN_PRODUCT, "rb");
-    if (!dataFile) return 0;
+    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
+    FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
+    if (!dataFile || !indexFile)
+    {
+        if (dataFile) fclose(dataFile);
+        if (indexFile) fclose(indexFile);
+        return 0;
+    }
+
+    if (status.modificationsProduct)
+    {
+        reorganizeProductFile();
+    }
+
+    ll segLastId = fseekSegmentOffset(dataFile, indexFile, productId);
 
     printf("Buscando produto ID %lld...\n", productId);
 
@@ -85,26 +104,42 @@ int searchProductById(const ll productId)
     int found = 0;
     int checked = 0;
 
-    while (fread(&p, sizeof(Product), 1, dataFile)) 
+    printf("\nSEGMENTO:\n");
+    while (fread(&p, sizeof(Product), 1, dataFile) && p.id <= segLastId) 
 	{
         checked++;
         
+        printProduct(p);
+
         if (p.active == '0') continue;
+
+        if(p.id > productId)
+        {
+            fseek(dataFile, -1 * sizeof(Product), SEEK_SET);
+            while (fread(&p, sizeof(Product), 1, dataFile) && p.next != -1)
+            {
+                fseek(dataFile, p.next, SEEK_SET); 
+            }
+        }
 
         if (p.id == productId) 
 		{
-            printf("\nPRODUTO ENCONTRADO\n");
-            printProduct(p);
             found = 1;
             break;
         }
     }
 
-    if (!found) 
+    if (found) 
 	{
-        printf("Produto ID %lld nao encontrado.\n", productId);
-        printf("Foram verificados %d registros.\n", checked);
+        printf("\nPRODUTO ENCONTRADO\n");
+        printProduct(p);
     }
+    else
+    {
+        printf("Produto ID %lld nao encontrado.\n", productId);
+    }
+
+    printf("Foram verificados %d registros.\n", checked);
 
     fclose(dataFile);
     return found;
@@ -112,67 +147,63 @@ int searchProductById(const ll productId)
 
 int searchOrderById(const ll orderId)
 {
-    FILE *dataFile = fopen(BIN_ORDER, "rb");
-    if (!dataFile) return 0;
+    FILE *dataFile = fopen(BIN_ORDER, "r+b");
+    FILE *indexFile = fopen(INDEX_ORDER, "rb");
+    if (!dataFile || !indexFile)
+    {
+        if (dataFile) fclose(dataFile);
+        if (indexFile) fclose(indexFile);
+        return 0;
+    }
+
+    if (status.modificationsOrder)
+    {
+        reorganizeOrderFile();
+    }
+
+    ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);
 
     printf("Buscando pedido ID %lld...\n", orderId);
 
     Order o;
     int found = 0;
-    int mainFound = 0;
+    int checked = 0;
 
-    fseek(dataFile, 0, SEEK_SET);
-    while (fread(&o, sizeof(Order), 1, dataFile) && !mainFound) {
-        if (o.active != '0' && o.id == orderId) {
-            mainFound = 1;
-            found = 1;
-            
-            printf("\nPEDIDO ENCONTRADO\n");
-            printOrder(o);
-            
-            if (o.next != -1) {
-                printf("\nSEGUINDO CADEIA DE EXTENSAO\n");
-                Order current = o;
-                int chainLevel = 1;
-                
-                while (current.next != -1 && chainLevel < 10) 
-				{
-                    fseek(dataFile, 0, SEEK_SET);
-                    int foundNext = 0;
-                    Order nextOrder;
-                    
-                    while (fread(&nextOrder, sizeof(Order), 1, dataFile)) 
-					{
-                        if (nextOrder.active != '0' && nextOrder.id == current.next) 
-						{
-                            current = nextOrder;
-                            foundNext = 1;
-                            
-                            printf("Elo %d: ID %lld -> Usuario: %lld, Produto: %lld, Proximo Elo: %lld\n",
-                                   chainLevel, current.id, current.userId, 
-                                   current.purchasedProductId, current.next);
-                            break;
-                        }
-                    }
-                    
-                    if (!foundNext) {
-                        printf("Elo %lld nao encontrado.\n", current.next);
-                        break;
-                    }
-                    
-                    chainLevel++;
-                }
-                
-                if (chainLevel >= 10) {
-                    printf("Cadeia muito longa, parando por segurança.\n");
-                }
+    printf("\nSEGMENTO:\n");
+    while (fread(&o, sizeof(Order), 1, dataFile) && o.id <= segLastId)
+    {
+        checked++;
+        printOrder(o);
+
+        if (o.active == '0') continue;
+
+        if (o.id > orderId)
+        {
+            fseek(dataFile, -1 * sizeof(Order), SEEK_CUR);
+            while (fread(&o, sizeof(Order), 1, dataFile) && o.next != -1)
+            {
+                fseek(dataFile, o.next, SEEK_SET);
             }
+        }
+
+        if (o.id == orderId)
+        {
+            found = 1;
+            break;
         }
     }
 
-    if (!found) {
+    if (found)
+    {
+        printf("\nPEDIDO ENCONTRADO\n");
+        printOrder(o);
+    }
+    else
+    {
         printf("Pedido ID %lld nao encontrado.\n", orderId);
     }
+
+    printf("Foram verificados %d registros.\n", checked);
 
     fclose(dataFile);
     return found;

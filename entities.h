@@ -1,7 +1,8 @@
 typedef struct {
     int modificationsProduct;
     int modificationsOrder;
-    ll currentExtensionId;
+    ll headProduct;
+    ll headOrder;
 } Status;
 
 typedef struct {
@@ -11,23 +12,31 @@ typedef struct {
 
 typedef struct {
     ll id;
+    char active; // '1' = ativo, '0' = excluido
+    ll next; // -1 = fim
+
     ll userId;
     ll purchasedProductId;
     time_t dateTime;
     int skuQty;
-    char active; // '1' = ativo, '0' = excluido
-    ll next; // -1 = fim
 } Order;
 
 typedef struct {
     ll id;
+    char active; // '1' = ativo, '0' = excluido
+    ll next; // -1 = fim
+
     ll categoryId;
     ll brandId;
     int price; // em centavos
     char productGender;
     char categoryAlias[MAX_CATEGORY_ALIAS];
-    char active; // '1' = ativo, '0' = excluido
-    ll next; // -1 = fim
 } Product;
+
+typedef struct {
+    ll id;
+    char active;
+    ll next;
+} RecordHeader;
 
 extern Status status;

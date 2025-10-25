@@ -1,8 +1,8 @@
 /*
 int createIndex(const char *dataFile, const char *indexFile, size_t recordSize)
-void convertTextToBinary()
-void reorganizeOrderFile()
 void reorganizeProductFile()
+void reorganizeOrderFile()
+void convertTextToBinary()
 */
 
 int createIndex(const char *dataFile, 
@@ -63,37 +63,76 @@ int createIndex(const char *dataFile,
     return 1;
 }
 
-void reorganizeProductFile() 
+//Todo: generalize the reorganize functions
+void reorganizeProductFile()
 {
     printf("Reorganizando arquivo de produtos...\n");
 
     FILE *oldFile = fopen(BIN_PRODUCT, "rb");
-    FILE *newFile = fopen("temp_products_reorg.bin", "wb");
-    if (!oldFile || !newFile) 
+    FILE *newFile = fopen("temp_reorg.bin", "wb");
+    if (!oldFile || !newFile)
     {
-        printf("Erro ao reorganizar arquivo.\n");
+        printf("Erro ao abrir arquivos.\n");
         if (oldFile) fclose(oldFile);
         if (newFile) fclose(newFile);
         return;
     }
 
-    Product p;
-    while (fread(&p, sizeof(Product), 1, oldFile))
+    // insert head and its extensions
+    if (status.headProduct != -1)
     {
+        long nextOffset = status.headProduct;
+        while (nextOffset != -1)
+        {
+            Product p;
+            fseek(oldFile, nextOffset, SEEK_SET);
+            fread(&p, sizeof(Product), 1, oldFile);
+
+            long tmpNext = p.next;
+            p.next = -1; // reset next
+            fwrite(&p, sizeof(Product), 1, newFile);
+
+            nextOffset = tmpNext;
+        }
+    }
+
+    // scan old file sequentially inserting records and its extensions until extension area
+    fseek(oldFile, 0, SEEK_END);
+    long totalRecords = ftell(oldFile) / sizeof(Product);
+    rewind(oldFile);
+
+    ll lastId = -1;
+    for (long i = 0; i < totalRecords; i++)
+    {
+        long offset = i * sizeof(Product);
+
+        Product p;
+        fseek(oldFile, offset, SEEK_SET);
+        fread(&p, sizeof(Product), 1, oldFile);
+
+        if (p.id < lastId) break;
+        lastId = p.id;
+
         if (p.active == '0') continue;
 
-        long next = p.next;
+        long nextOffset = p.next;
+
         p.next = -1;
         fwrite(&p, sizeof(Product), 1, newFile);
 
-        while (next != -1)
+        while (nextOffset != -1)
         {
-            fseek(oldFile, next, SEEK_SET);
-            fread(&p, sizeof(Product), 1, oldFile);
-            next = p.next;
-            p.next = -1;
-            if (p.active == '0') continue;
-            fwrite(&p, sizeof(Product), 1, newFile);
+            Product nextP;
+            fseek(oldFile, nextOffset, SEEK_SET);
+            fread(&nextP, sizeof(Product), 1, oldFile);
+
+            if (nextP.active == '0') break;
+
+            long tmpNext = nextP.next;
+            nextP.next = -1;
+            fwrite(&nextP, sizeof(Product), 1, newFile);
+
+            nextOffset = tmpNext;
         }
     }
 
@@ -103,8 +142,8 @@ void reorganizeProductFile()
     remove(BIN_PRODUCT);
     rename("temp_products_reorg.bin", BIN_PRODUCT);
 
-    status.currentExtensionId = EXTENSION_AREA_START;
     status.modificationsProduct = 0;
+    status.headProduct = -1;
     FILE *statusFile = fopen(BIN_STATUS, "wb");
     if (statusFile)
     {
@@ -113,43 +152,76 @@ void reorganizeProductFile()
     }
 
     createIndex(BIN_PRODUCT, INDEX_PRODUCT, sizeof(Product));
+    printf("Reorganização concluída com sucesso.\n");
 }
 
-void reorganizeOrderFile() 
+void reorganizeOrderFile()
 {
     printf("Reorganizando arquivo de pedidos...\n");
 
     FILE *oldFile = fopen(BIN_ORDER, "rb");
     FILE *newFile = fopen("temp_orders_reorg.bin", "wb");
-
-    if (!oldFile || !newFile) 
+    if (!oldFile || !newFile)
     {
-        printf("Erro ao reorganizar arquivo.\n");
+        printf("Erro ao abrir arquivos.\n");
         if (oldFile) fclose(oldFile);
         if (newFile) fclose(newFile);
         return;
     }
 
-    Order o;
-    while (fread(&o, sizeof(Order), 1, oldFile))
+    if (status.headOrder != -1)
     {
+        long nextOffset = status.headOrder;
+        while (nextOffset != -1)
+        {
+            Order o;
+            fseek(oldFile, nextOffset, SEEK_SET);
+            fread(&o, sizeof(Order), 1, oldFile);
+
+            long tmpNext = o.next;
+            o.next = -1; // reseta o ponteiro
+            fwrite(&o, sizeof(Order), 1, newFile);
+
+            nextOffset = tmpNext;
+        }
+    }
+
+    fseek(oldFile, 0, SEEK_END);
+    long totalRecords = ftell(oldFile) / sizeof(Order);
+    rewind(oldFile);
+
+    ll lastId = -1;
+    for (long i = 0; i < totalRecords; i++)
+    {
+        long offset = i * sizeof(Order);
+
+        Order o;
+        fseek(oldFile, offset, SEEK_SET);
+        fread(&o, sizeof(Order), 1, oldFile);
+
+        if (o.id < lastId) break; 
+        lastId = o.id;
+
         if (o.active == '0') continue;
 
-        long next = o.next;
+        long nextOffset = o.next;
+
         o.next = -1;
         fwrite(&o, sizeof(Order), 1, newFile);
 
-        while (next != -1)
+        while (nextOffset != -1)
         {
-            fseek(oldFile, next, SEEK_SET);
-            fread(&o, sizeof(Order), 1, oldFile);
+            Order nextO;
+            fseek(oldFile, nextOffset, SEEK_SET);
+            fread(&nextO, sizeof(Order), 1, oldFile);
 
-            next = o.next;
-            o.next = -1;
+            if (nextO.active == '0') break;
 
-            if (o.active == '0') continue;
+            long tmpNext = nextO.next;
+            nextO.next = -1;
+            fwrite(&nextO, sizeof(Order), 1, newFile);
 
-            fwrite(&o, sizeof(Order), 1, newFile);
+            nextOffset = tmpNext;
         }
     }
 
@@ -159,8 +231,9 @@ void reorganizeOrderFile()
     remove(BIN_ORDER);
     rename("temp_orders_reorg.bin", BIN_ORDER);
 
-    status.currentExtensionId = EXTENSION_AREA_START;
     status.modificationsOrder = 0;
+    status.headOrder = -1;
+
     FILE *statusFile = fopen(BIN_STATUS, "wb");
     if (statusFile)
     {
@@ -169,6 +242,7 @@ void reorganizeOrderFile()
     }
 
     createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
+    printf("Reorganização de pedidos concluída com sucesso.\n");
 }
 
 void convertTextToBinary() 
