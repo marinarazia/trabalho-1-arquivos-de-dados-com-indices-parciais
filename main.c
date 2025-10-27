@@ -67,11 +67,11 @@ int main()
 			    searchOrderById(inputId);
                 break;
 			case 6:
-                insert(BIN_PRODUCT, INDEX_PRODUCT, createNewProduct(), sizeof(Product));
+                insert(PRODUCT_DAT, PRODUCT_INDEX, createNewProduct(), sizeof(Product));
                 status.modificationsProduct++;
                 break;
 			case 7:
-                insert(BIN_ORDER, INDEX_ORDER, createNewOrder(), sizeof(Order));
+                insert(ORDER_DAT, ORDER_INDEX, createNewOrder(), sizeof(Order));
                 status.modificationsOrder++;
                 break;
 			case 8:
@@ -93,7 +93,7 @@ int main()
 		}
 	} while (option != 0);
 
-    FILE *binStatus = fopen(BIN_STATUS, "wb");
+    FILE *binStatus = fopen(STATUS_DAT, "wb");
     if (binStatus)
     {
         fwrite(&status, sizeof(Status), 1, binStatus);
@@ -105,12 +105,12 @@ int main()
 
 void setupFiles()
 {
-    FILE *binOrder = fopen(BIN_ORDER, "rb");
-    FILE *binProduct = fopen(BIN_PRODUCT, "rb");
-    FILE *indexOrder = fopen(INDEX_ORDER, "rb");
-    FILE *indexProduct = fopen(INDEX_PRODUCT, "rb");
+    FILE *binOrder = fopen(ORDER_DAT, "rb");
+    FILE *binProduct = fopen(PRODUCT_DAT, "rb");
+    FILE *indexOrder = fopen(ORDER_INDEX, "rb");
+    FILE *indexProduct = fopen(PRODUCT_INDEX, "rb");
 
-    FILE *binStatus = fopen(BIN_STATUS, "rb");
+    FILE *binStatus = fopen(STATUS_DAT, "rb");
     if (binStatus)
     {
         fread(&status, sizeof(Status), 1, binStatus);
@@ -118,7 +118,7 @@ void setupFiles()
     }
     else
     {
-        binStatus = fopen(BIN_STATUS, "wb");
+        binStatus = fopen(STATUS_DAT, "wb");
         if (binStatus)
         {
             fwrite(&status, sizeof(Status), 1, binStatus);
@@ -130,15 +130,15 @@ void setupFiles()
     {
         convertTextToBinary();
 
-        int orderTmps = createSortedTemps(BIN_ORDER, sizeof(Order), compareOrder);
-        mergeAllTemps(orderTmps, sizeof(Order), compareOrder, BIN_ORDER);
+        int orderTmps = createSortedTemps(ORDER_DAT, sizeof(Order), compareOrder);
+        mergeAllTemps(orderTmps, sizeof(Order), compareOrder, ORDER_DAT);
 
-        int productTmps = createSortedTemps(BIN_PRODUCT, sizeof(Product), compareProduct);
-        mergeAllTemps(productTmps, sizeof(Product), compareProduct, BIN_PRODUCT);
-        removeDuplicateProducts(BIN_PRODUCT);
+        int productTmps = createSortedTemps(PRODUCT_DAT, sizeof(Product), compareProduct);
+        mergeAllTemps(productTmps, sizeof(Product), compareProduct, PRODUCT_DAT);
+        removeDuplicateProducts(PRODUCT_DAT);
 
-        createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
-        createIndex(BIN_PRODUCT, INDEX_PRODUCT, sizeof(Product));
+        createIndex(ORDER_DAT, ORDER_INDEX, sizeof(Order));
+        createIndex(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
     }
 
     if (binOrder) fclose(binOrder);

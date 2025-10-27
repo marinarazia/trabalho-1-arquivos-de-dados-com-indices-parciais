@@ -12,7 +12,7 @@ int insert(const char* dataFileName,
 {
     FILE *dataFile = fopen(dataFileName, "r+b");
     FILE *indexFile = fopen(indexFileName, "rb");
-    FILE *statusFile = fopen(BIN_STATUS, "r+b");
+    FILE *statusFile = fopen(STATUS_DAT, "r+b");
     if (!dataFile || !indexFile || !statusFile)
     {
         if (dataFile) fclose(dataFile);
@@ -132,8 +132,8 @@ cleanup:
 
 int removeProduct(const ll productId)
 {
-    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
-    FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
+    FILE *dataFile = fopen(PRODUCT_DAT, "r+b");
+    FILE *indexFile = fopen(PRODUCT_INDEX, "rb");
     if (!dataFile || !indexFile)
     {
         if (dataFile) fclose(dataFile);
@@ -177,8 +177,8 @@ int removeProduct(const ll productId)
 
 int removeOrder(const ll orderId)
 {
-    FILE *dataFile = fopen(BIN_ORDER, "r+b");
-    FILE *indexFile = fopen(INDEX_ORDER, "rb");
+    FILE *dataFile = fopen(ORDER_DAT, "r+b");
+    FILE *indexFile = fopen(ORDER_INDEX, "rb");
     if (!dataFile || !indexFile)
     {
         if (dataFile) fclose(dataFile);

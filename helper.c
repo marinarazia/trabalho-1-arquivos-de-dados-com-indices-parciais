@@ -5,9 +5,9 @@ static inline float toDollars(const int cents)
 
 static ll* getHeadPointer(const char* dataFileName)
 {
-    if (strstr(dataFileName, BIN_PRODUCT))
+    if (strstr(dataFileName, PRODUCT_DAT))
         return &status.headProduct;
-    if (strstr(dataFileName, BIN_ORDER))
+    if (strstr(dataFileName, ORDER_DAT))
         return &status.headOrder;
     return NULL;
 }

@@ -8,7 +8,7 @@ int searchOrderById(const ll orderId);
 
 void listOrders(const int limit)
 {
-    FILE *binOrder = fopen(BIN_ORDER, "rb");
+    FILE *binOrder = fopen(ORDER_DAT, "rb");
     if (!binOrder) return;
 
     Order o;
@@ -27,7 +27,7 @@ void listOrders(const int limit)
 
 void listProducts(const int limit)
 {
-    FILE *binProduct = fopen(BIN_PRODUCT, "rb");
+    FILE *binProduct = fopen(PRODUCT_DAT, "rb");
     if (!binProduct)
     {
         printf("Arquivo products.bin nao encontrado.\n");
@@ -51,7 +51,7 @@ void listProducts(const int limit)
 // scan dataFile por não ter index de usuário
 int searchOrdersByUser(const ll userId)
 {
-    FILE *dataFile = fopen(BIN_ORDER, "rb");
+    FILE *dataFile = fopen(ORDER_DAT, "rb");
     if (!dataFile) return 0;
 
     if (status.modificationsOrder)
@@ -82,8 +82,8 @@ int searchOrdersByUser(const ll userId)
 
 int searchProductById(const ll productId)
 {
-    FILE *dataFile = fopen(BIN_PRODUCT, "r+b");
-    FILE *indexFile = fopen(INDEX_PRODUCT, "rb");
+    FILE *dataFile = fopen(PRODUCT_DAT, "r+b");
+    FILE *indexFile = fopen(PRODUCT_INDEX, "rb");
     if (!dataFile || !indexFile)
     {
         if (dataFile) fclose(dataFile);
@@ -147,8 +147,8 @@ int searchProductById(const ll productId)
 
 int searchOrderById(const ll orderId)
 {
-    FILE *dataFile = fopen(BIN_ORDER, "r+b");
-    FILE *indexFile = fopen(INDEX_ORDER, "rb");
+    FILE *dataFile = fopen(ORDER_DAT, "r+b");
+    FILE *indexFile = fopen(ORDER_INDEX, "rb");
     if (!dataFile || !indexFile)
     {
         if (dataFile) fclose(dataFile);

@@ -68,7 +68,7 @@ void reorganizeProductFile()
 {
     printf("Reorganizando arquivo de produtos...\n");
 
-    FILE *oldFile = fopen(BIN_PRODUCT, "rb");
+    FILE *oldFile = fopen(PRODUCT_DAT, "rb");
     FILE *newFile = fopen("temp_reorg.bin", "wb");
     if (!oldFile || !newFile)
     {
@@ -139,19 +139,19 @@ void reorganizeProductFile()
     fclose(oldFile);
     fclose(newFile);
 
-    remove(BIN_PRODUCT);
-    rename("temp_products_reorg.bin", BIN_PRODUCT);
+    remove(PRODUCT_DAT);
+    rename("temp_products_reorg.bin", PRODUCT_DAT);
 
     status.modificationsProduct = 0;
     status.headProduct = -1;
-    FILE *statusFile = fopen(BIN_STATUS, "wb");
+    FILE *statusFile = fopen(STATUS_DAT, "wb");
     if (statusFile)
     {
         fwrite(&status, sizeof(Status), 1, statusFile);
         fclose(statusFile);
     }
 
-    createIndex(BIN_PRODUCT, INDEX_PRODUCT, sizeof(Product));
+    createIndex(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
     printf("Reorganização concluída com sucesso.\n");
 }
 
@@ -159,7 +159,7 @@ void reorganizeOrderFile()
 {
     printf("Reorganizando arquivo de pedidos...\n");
 
-    FILE *oldFile = fopen(BIN_ORDER, "rb");
+    FILE *oldFile = fopen(ORDER_DAT, "rb");
     FILE *newFile = fopen("temp_orders_reorg.bin", "wb");
     if (!oldFile || !newFile)
     {
@@ -228,28 +228,28 @@ void reorganizeOrderFile()
     fclose(oldFile);
     fclose(newFile);
 
-    remove(BIN_ORDER);
-    rename("temp_orders_reorg.bin", BIN_ORDER);
+    remove(ORDER_DAT);
+    rename("temp_orders_reorg.bin", ORDER_DAT);
 
     status.modificationsOrder = 0;
     status.headOrder = -1;
 
-    FILE *statusFile = fopen(BIN_STATUS, "wb");
+    FILE *statusFile = fopen(STATUS_DAT, "wb");
     if (statusFile)
     {
         fwrite(&status, sizeof(Status), 1, statusFile);
         fclose(statusFile);
     }
 
-    createIndex(BIN_ORDER, INDEX_ORDER, sizeof(Order));
+    createIndex(ORDER_DAT, ORDER_INDEX, sizeof(Order));
     printf("Reorganização de pedidos concluída com sucesso.\n");
 }
 
 void convertTextToBinary() 
 {
     FILE *csv = fopen(DATASET_CSV, "r");
-    FILE *orders = fopen(BIN_ORDER, "wb");
-    FILE *products = fopen(BIN_PRODUCT, "wb");
+    FILE *orders = fopen(ORDER_DAT, "wb");
+    FILE *products = fopen(PRODUCT_DAT, "wb");
 
     if (!csv || !orders || !products) 
 	{

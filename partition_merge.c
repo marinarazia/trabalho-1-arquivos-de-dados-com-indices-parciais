@@ -143,7 +143,7 @@ void removeDuplicateProducts(const char *sortedFile)
     fclose(in);
     fclose(out);
 
-    rename("pruducts_unique.bin", BIN_PRODUCT);
+    rename("pruducts_unique.bin", PRODUCT_DAT);
     printf("Arquivo de produtos unicos criado: %s\n", "products_unique.bin");
 }
 
