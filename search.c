@@ -1,9 +1,9 @@
 /*
 void listOrders(const int limit);
 void listProducts(const int limit);
-int searchOrdersByUser(const ll userId);
 int searchProductById(const ll productId);
 int searchOrderById(const ll orderId);
+int searchOrdersByUser(const ll userId);
 */
 
 void listOrders(const int limit)
@@ -48,38 +48,6 @@ void listProducts(const int limit)
     fclose(binProduct);
 }
 
-// scan dataFile por não ter index de usuário
-int searchOrdersByUser(const ll userId)
-{
-    FILE *dataFile = fopen(ORDER_DAT, "rb");
-    if (!dataFile) return 0;
-
-    if (status.modificationsOrder)
-    {
-        reorganizeOrderFile();
-    }
-
-    Order o;
-    int found = 0;
-    while (fread(&o, sizeof(Order), 1, dataFile))
-    {
-        if (o.userId == userId)
-        {
-            printOrder(o);
-            found++;
-        }
-    }
-
-    if (!found)
-    {
-        printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
-    }
-
-
-    fclose(dataFile);
-    return found;
-}
-
 int searchProductById(const ll productId)
 {
     FILE *dataFile = fopen(PRODUCT_DAT, "r+b");
@@ -93,7 +61,7 @@ int searchProductById(const ll productId)
 
     if (status.modificationsProduct)
     {
-        reorganizeProductFile();
+		reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
     }
 
     ll segLastId = fseekSegmentOffset(dataFile, indexFile, productId);
@@ -158,7 +126,7 @@ int searchOrderById(const ll orderId)
 
     if (status.modificationsOrder)
     {
-        reorganizeOrderFile();
+		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Product));
     }
 
     ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);
@@ -208,3 +176,36 @@ int searchOrderById(const ll orderId)
     fclose(dataFile);
     return found;
 }
+
+// scan dataFile por não ter index de usuário
+int searchOrdersByUser(const ll userId)
+{
+    FILE *dataFile = fopen(ORDER_DAT, "rb");
+    if (!dataFile) return 0;
+
+    if (status.modificationsOrder)
+    {
+		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Product));
+    }
+
+    Order o;
+    int found = 0;
+    while (fread(&o, sizeof(Order), 1, dataFile))
+    {
+        if (o.userId == userId)
+        {
+            printOrder(o);
+            found++;
+        }
+    }
+
+    if (!found)
+    {
+        printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
+    }
+
+
+    fclose(dataFile);
+    return found;
+}
+

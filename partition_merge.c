@@ -3,20 +3,20 @@ int compareOrder(const void *a, const void *b);
 int compareProduct(const void *a, const void *b);
 void removeDuplicateProducts(const char *sortedFile);
 
-void mergeAllTemps(int tempCount, 
-                   size_t recordSize,
-                   int (*comparator)(const void *, const void *),
+void mergeAllTemps(const int tempCount, 
+                   const size_t recordSize,
+                   const int (*comparator)(const void *, const void *),
                    const char *finalOutput);
 
 int mergeTwoTemps(const char *file1, 
                  const char *file2, 
                  const char *outFile,
-                 size_t recordSize, 
-                 int (*comparator)(const void *, const void *));
+                 const size_t recordSize, 
+                 const int (*comparator)(const void *, const void *));
 
 int createSortedTemps(const char *inputFile, 
-                      size_t recordSize,
-                      int (*comparator)(const void *, const void *))
+                      const size_t recordSize,
+                      const int (*comparator)(const void *, const void *))
 */
 
 int compareOrder(const void *a, const void *b)
@@ -38,8 +38,8 @@ int compareProduct(const void *a, const void *b)
 }
 
 int createSortedTemps(const char *inputFile, 
-                      size_t recordSize,
-                      int (*comparator)(const void *, const void *))
+                      const size_t recordSize,
+                      const int (*comparator)(const void *, const void *))
 {
     FILE *in = fopen(inputFile, "rb");
     if (!in) { printf("Erro ao abrir %s\n", inputFile); return 0; }
@@ -72,8 +72,8 @@ int createSortedTemps(const char *inputFile,
 int mergeTwoTemps(const char *file1, 
                   const char *file2, 
                   const char *outFile,
-                  size_t recordSize, 
-                  int (*comparator)(const void *, const void *))
+                  const size_t recordSize, 
+                  const int (*comparator)(const void *, const void *))
 {
     FILE *f1 = fopen(file1, "rb");
     FILE *f2 = fopen(file2, "rb");
@@ -147,9 +147,9 @@ void removeDuplicateProducts(const char *sortedFile)
     printf("Arquivo de produtos unicos criado: %s\n", "products_unique.bin");
 }
 
-void mergeAllTemps(int tempCount, 
-                   size_t recordSize,
-                   int (*comparator)(const void *, const void *),
+void mergeAllTemps(const int tempCount, 
+                   const size_t recordSize,
+                   const int (*comparator)(const void *, const void *),
                    const char *finalOutput)
 {
     int pass = 0;

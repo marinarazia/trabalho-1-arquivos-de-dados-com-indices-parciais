@@ -1,4 +1,15 @@
+/*
 static inline float toDollars(const int cents)
+static ll* getHeadPointer(const char* dataFileName)
+ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
+void printProduct(const Product p)
+void printOrder(const Order o)
+Product* createNewProduct()
+Order* createNewOrder()
+*/
+static inline float toDollars(const int cents)
+
+
 {
     return cents / 100.0f;
 }
@@ -12,6 +23,7 @@ static ll* getHeadPointer(const char* dataFileName)
     return NULL;
 }
 
+// fseek into to the right segment based on the id with binary search
 ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
 {
     long blockOffset = 0;
@@ -84,7 +96,8 @@ void printOrder(const Order o)
            o.next);
 }
 
-Order* createNewOrder() {
+Order* createNewOrder()
+{
     Order *newOrder = malloc(sizeof(Order));
     if (!newOrder) return NULL;
 
@@ -105,7 +118,8 @@ Order* createNewOrder() {
     return newOrder;
 }
 
-Product* createNewProduct() {
+Product* createNewProduct()
+{
     Product *newProduct = malloc(sizeof(Product));
     if (!newProduct) return NULL;
 

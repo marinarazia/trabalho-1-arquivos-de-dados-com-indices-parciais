@@ -87,8 +87,8 @@ int main()
                 status.modificationsProduct++;
 			    break;
 			case 10:
-				reorganizeOrderFile();
-				reorganizeProductFile();
+				reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
+				reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order));
 				break;    
 		}
 	} while (option != 0);
@@ -119,6 +119,8 @@ void setupFiles()
     else
     {
         binStatus = fopen(STATUS_DAT, "wb");
+        status.headProduct = -1;
+        status.headOrder = -1;
         if (binStatus)
         {
             fwrite(&status, sizeof(Status), 1, binStatus);

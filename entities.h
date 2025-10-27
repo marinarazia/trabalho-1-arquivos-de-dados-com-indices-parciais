@@ -1,8 +1,8 @@
 typedef struct {
-    int modificationsProduct;
     int modificationsOrder;
-    ll headProduct;
+    int modificationsProduct;
     ll headOrder;
+    ll headProduct;
 } Status;
 
 typedef struct {

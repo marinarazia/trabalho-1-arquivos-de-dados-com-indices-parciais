@@ -1,14 +1,17 @@
 /*
-int insertOrder(const Order order);
-int insertProduct(const Product product);
+int insert(const char* dataFileName, 
+           const char* indexFileName, 
+           const void* record,
+           const size_t recordSize)
+
 int removeProduct(const ll productId);
 int removeOrder(const ll orderId);
 */
 
 int insert(const char* dataFileName, 
            const char* indexFileName, 
-           void* record,
-           size_t recordSize)
+           const void* record,
+           const size_t recordSize)
 {
     FILE *dataFile = fopen(dataFileName, "r+b");
     FILE *indexFile = fopen(indexFileName, "rb");
@@ -130,6 +133,7 @@ cleanup:
     return 1;
 }
 
+//Todo: generalize remove function
 int removeProduct(const ll productId)
 {
     FILE *dataFile = fopen(PRODUCT_DAT, "r+b");

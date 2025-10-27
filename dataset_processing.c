@@ -1,13 +1,20 @@
 /*
-int createIndex(const char *dataFile, const char *indexFile, size_t recordSize)
-void reorganizeProductFile()
-void reorganizeOrderFile()
+
+int createIndex(const char *dataFile, 
+                const char *indexFile, 
+                const size_t recordSize)
+
+void reorganizeFile(const char* dataFile, 
+                    const char* indexFile, 
+                    const size_t recordSize)
+
 void convertTextToBinary()
+
 */
 
 int createIndex(const char *dataFile, 
                 const char *indexFile, 
-                size_t recordSize)
+                const size_t recordSize)
 {
     FILE *data = fopen(dataFile, "rb");
     FILE *index = fopen(indexFile, "wb");
@@ -63,12 +70,13 @@ int createIndex(const char *dataFile,
     return 1;
 }
 
-//Todo: generalize the reorganize functions
-void reorganizeProductFile()
+void reorganizeFile(const char* dataFile, 
+                    const char* indexFile, 
+                    const size_t recordSize)
 {
-    printf("Reorganizando arquivo de produtos...\n");
+    printf("Reorganizando arquivo %s...\n", dataFile);
 
-    FILE *oldFile = fopen(PRODUCT_DAT, "rb");
+    FILE *oldFile = fopen(dataFile, "rb");
     FILE *newFile = fopen("temp_reorg.bin", "wb");
     if (!oldFile || !newFile)
     {
@@ -78,161 +86,91 @@ void reorganizeProductFile()
         return;
     }
 
-    // insert head and its extensions
-    if (status.headProduct != -1)
+    ll* headOffset = &status.headOrder;
+    int* modifications = &status.modificationsOrder;
+    if (recordSize == sizeof(Product))
     {
-        long nextOffset = status.headProduct;
+        headOffset = &status.headProduct;
+        modifications = &status.modificationsProduct;
+    }
+
+    // insert logical head and its extensions
+    if (*headOffset != -1)
+    {
+        long nextOffset = *headOffset;
+        void *buffer = malloc(recordSize);
+        if (!buffer) { fclose(oldFile); fclose(newFile); return; }
+
         while (nextOffset != -1)
         {
-            Product p;
             fseek(oldFile, nextOffset, SEEK_SET);
-            fread(&p, sizeof(Product), 1, oldFile);
+            fread(buffer, recordSize, 1, oldFile);
 
-            long tmpNext = p.next;
-            p.next = -1; // reset next
-            fwrite(&p, sizeof(Product), 1, newFile);
+            RecordHeader *hdr = (RecordHeader *)buffer;
+            long tmpNext = hdr->next;
+            hdr->next = -1;
+            fwrite(buffer, recordSize, 1, newFile);
 
             nextOffset = tmpNext;
         }
+
+        free(buffer);
     }
 
-    // scan old file sequentially inserting records and its extensions until extension area
+    // scan dataFile and insert the records and its extensions until extension area
     fseek(oldFile, 0, SEEK_END);
-    long totalRecords = ftell(oldFile) / sizeof(Product);
+    long totalRecords = ftell(oldFile) / recordSize;
     rewind(oldFile);
 
     ll lastId = -1;
+    void *buffer = malloc(recordSize);
+    if (!buffer) { fclose(oldFile); fclose(newFile); return; }
+
     for (long i = 0; i < totalRecords; i++)
     {
-        long offset = i * sizeof(Product);
+        fseek(oldFile, i * recordSize, SEEK_SET);
+        fread(buffer, recordSize, 1, oldFile);
 
-        Product p;
-        fseek(oldFile, offset, SEEK_SET);
-        fread(&p, sizeof(Product), 1, oldFile);
+        RecordHeader *hdr = (RecordHeader *)buffer;
+        if (hdr->id < lastId) break;
+        lastId = hdr->id;
 
-        if (p.id < lastId) break;
-        lastId = p.id;
+        if (hdr->active == '0') continue;
 
-        if (p.active == '0') continue;
+        long nextOffset = hdr->next;
+        hdr->next = -1;
+        fwrite(buffer, recordSize, 1, newFile);
 
-        long nextOffset = p.next;
-
-        p.next = -1;
-        fwrite(&p, sizeof(Product), 1, newFile);
+        void *nextBuffer = malloc(recordSize);
+        if (!nextBuffer) break;
 
         while (nextOffset != -1)
         {
-            Product nextP;
             fseek(oldFile, nextOffset, SEEK_SET);
-            fread(&nextP, sizeof(Product), 1, oldFile);
+            fread(nextBuffer, recordSize, 1, oldFile);
 
-            if (nextP.active == '0') break;
+            RecordHeader *nextHdr = (RecordHeader *)nextBuffer;
+            if (nextHdr->active == '0') break;
 
-            long tmpNext = nextP.next;
-            nextP.next = -1;
-            fwrite(&nextP, sizeof(Product), 1, newFile);
+            long tmpNext = nextHdr->next;
+            nextHdr->next = -1;
+            fwrite(nextBuffer, recordSize, 1, newFile);
 
             nextOffset = tmpNext;
         }
+
+        free(nextBuffer);
     }
 
+    free(buffer);
     fclose(oldFile);
     fclose(newFile);
 
-    remove(PRODUCT_DAT);
-    rename("temp_products_reorg.bin", PRODUCT_DAT);
+    remove(dataFile);
+    rename("temp_reorg.bin", dataFile);
 
-    status.modificationsProduct = 0;
-    status.headProduct = -1;
-    FILE *statusFile = fopen(STATUS_DAT, "wb");
-    if (statusFile)
-    {
-        fwrite(&status, sizeof(Status), 1, statusFile);
-        fclose(statusFile);
-    }
-
-    createIndex(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
-    printf("Reorganização concluída com sucesso.\n");
-}
-
-void reorganizeOrderFile()
-{
-    printf("Reorganizando arquivo de pedidos...\n");
-
-    FILE *oldFile = fopen(ORDER_DAT, "rb");
-    FILE *newFile = fopen("temp_orders_reorg.bin", "wb");
-    if (!oldFile || !newFile)
-    {
-        printf("Erro ao abrir arquivos.\n");
-        if (oldFile) fclose(oldFile);
-        if (newFile) fclose(newFile);
-        return;
-    }
-
-    if (status.headOrder != -1)
-    {
-        long nextOffset = status.headOrder;
-        while (nextOffset != -1)
-        {
-            Order o;
-            fseek(oldFile, nextOffset, SEEK_SET);
-            fread(&o, sizeof(Order), 1, oldFile);
-
-            long tmpNext = o.next;
-            o.next = -1; // reseta o ponteiro
-            fwrite(&o, sizeof(Order), 1, newFile);
-
-            nextOffset = tmpNext;
-        }
-    }
-
-    fseek(oldFile, 0, SEEK_END);
-    long totalRecords = ftell(oldFile) / sizeof(Order);
-    rewind(oldFile);
-
-    ll lastId = -1;
-    for (long i = 0; i < totalRecords; i++)
-    {
-        long offset = i * sizeof(Order);
-
-        Order o;
-        fseek(oldFile, offset, SEEK_SET);
-        fread(&o, sizeof(Order), 1, oldFile);
-
-        if (o.id < lastId) break; 
-        lastId = o.id;
-
-        if (o.active == '0') continue;
-
-        long nextOffset = o.next;
-
-        o.next = -1;
-        fwrite(&o, sizeof(Order), 1, newFile);
-
-        while (nextOffset != -1)
-        {
-            Order nextO;
-            fseek(oldFile, nextOffset, SEEK_SET);
-            fread(&nextO, sizeof(Order), 1, oldFile);
-
-            if (nextO.active == '0') break;
-
-            long tmpNext = nextO.next;
-            nextO.next = -1;
-            fwrite(&nextO, sizeof(Order), 1, newFile);
-
-            nextOffset = tmpNext;
-        }
-    }
-
-    fclose(oldFile);
-    fclose(newFile);
-
-    remove(ORDER_DAT);
-    rename("temp_orders_reorg.bin", ORDER_DAT);
-
-    status.modificationsOrder = 0;
-    status.headOrder = -1;
+    *headOffset = -1;
+    *modifications = 0;
 
     FILE *statusFile = fopen(STATUS_DAT, "wb");
     if (statusFile)
@@ -241,8 +179,8 @@ void reorganizeOrderFile()
         fclose(statusFile);
     }
 
-    createIndex(ORDER_DAT, ORDER_INDEX, sizeof(Order));
-    printf("Reorganização de pedidos concluída com sucesso.\n");
+    createIndex(dataFile, indexFile, recordSize);
+    printf("Reorganização de %s concluída com sucesso.\n", dataFile);
 }
 
 void convertTextToBinary() 
