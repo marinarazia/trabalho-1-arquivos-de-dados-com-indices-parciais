@@ -26,6 +26,7 @@ void setupFiles();
 int main() 
 {
     int option;
+    int limit;
     ll inputId;
 
     setupFiles();
@@ -49,8 +50,16 @@ int main()
 
         switch (option) 
         {
-            case 1: listOrders(0); break;
-            case 2: listProducts(0); break;
+            case 1: 
+                printf("Digite um limite: ");
+                scanf("%d", &limit);
+                listOrders(limit); 
+                break;
+            case 2: 
+                printf("Digite um limite: ");
+                scanf("%d", &limit);
+                listProducts(limit); 
+                break;
             case 3:
                 printf("Digite o ID do usuario: ");
                 scanf("%lld", &inputId);

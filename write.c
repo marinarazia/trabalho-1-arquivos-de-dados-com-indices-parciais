@@ -8,6 +8,7 @@ int removeProduct(const ll productId);
 int removeOrder(const ll orderId);
 */
 
+//agora vai
 int insert(const char* dataFileName, 
            const char* indexFileName, 
            const void* record,
@@ -46,8 +47,12 @@ int insert(const char* dataFileName,
     long newPos = ftell(dataFile);
     fwrite(record, recordSize, 1, dataFile);
 
-    // se arquivo vazio novo registro vira head
-    if (*headPtr == -1)
+    // se head lógico vazio e primeiro record fisíco > record sendo inserido
+    // offset head lógico = offset record sendo inserido
+    fseek(dataFile, 0, SEEK_SET);
+    fread(currBuffer, recordSize, 1, dataFile);
+    RecordHeader *curr = (RecordHeader*)currBuffer;
+    if (*headPtr == -1 && rec->id < curr->id)
     {
         *headPtr = newPos;
         fseek(statusFile, 0, SEEK_SET);
@@ -55,54 +60,47 @@ int insert(const char* dataFileName,
         printf("File empty. New head at %ld\n", newPos);
         goto cleanup;
     }
-
-    fseek(dataFile, *headPtr, SEEK_SET);
-    fread(currBuffer, recordSize, 1, dataFile);
-    RecordHeader *curr = (RecordHeader*)currBuffer;
-
-    // inserir antes de head se necessario
-    if (rec->id < curr->id)
+    
+    // caso head lógico exista (registro menor que primeiro registro físico)
+    int insertAfterHead = 0;
+    if (*headPtr != -1)
     {
-        fseek(dataFile, newPos, SEEK_SET);
-        fwrite(rec, recordSize, 1, dataFile);
-
-        *headPtr = newPos;
-        fseek(statusFile, 0, SEEK_SET);
-        fwrite(&status, sizeof(Status), 1, statusFile);
-        printf("Inserted new head record ID %lld\n", rec->id);
-        goto cleanup;
-    }
-
-    fseek(dataFile, *headPtr, SEEK_SET);
-    fread(currBuffer, recordSize, 1, dataFile);
-    curr = (RecordHeader*)currBuffer;
-
-    //inserir depois de head lógico
-    if (rec->id > curr->id && curr->next != -1 && rec->id < ((RecordHeader*)malloc(recordSize))->id)
-    {
-        rec->next = curr->next;
-        curr->next = newPos;
-
+        // inserir antes de head se necessario
         fseek(dataFile, *headPtr, SEEK_SET);
-        fwrite(curr, recordSize, 1, dataFile);
-
-        fseek(dataFile, newPos, SEEK_SET);
-        fwrite(rec, recordSize, 1, dataFile);
-
-        printf("Inserted record ID %lld between head ID %lld and its next\n", rec->id, curr->id);
-        goto cleanup;
+        fread(currBuffer, recordSize, 1, dataFile);
+        curr = (RecordHeader*)currBuffer;
+        if (rec->id < curr->id)
+        {
+            rec->next = *headPtr;
+            fseek(dataFile, newPos, SEEK_SET);
+            fwrite(rec, recordSize, 1, dataFile);
+            *headPtr = newPos;
+            fseek(statusFile, 0, SEEK_SET);
+            fwrite(&status, sizeof(Status), 1, statusFile);
+            printf("Inserted new head record ID %lld\n", rec->id);
+            goto cleanup;
+        }
+        // inserir depois de head lógico
+        rewind(dataFile);
+        fread(currBuffer, recordSize, 1, dataFile);
+        curr = (RecordHeader*)currBuffer;
+        if (rec->id < curr->id)
+        {
+            insertAfterHead = 1;
+        }
     }
 
-    fseekSegmentOffset(dataFile, indexFile, rec->id);
-    long prevPos = -1;
+    if (insertAfterHead)
+        fseek(dataFile, *headPtr, SEEK_SET); 
+    else
+        fseekSegmentOffset(dataFile, indexFile, rec->id);
 
+    //inserir no meio
+    long prevPos = -1;
     while (fread(currBuffer, recordSize, 1, dataFile))
     {
         curr = (RecordHeader*)currBuffer;
 
-        if (curr->active == '0') continue;
-
-        // inserir extensão no meio 
         if (curr->id > rec->id)
         {
             prevPos = ftell(dataFile) - (recordSize * 2);
@@ -110,17 +108,73 @@ int insert(const char* dataFileName,
             fread(prevBuffer, recordSize, 1, dataFile);
             RecordHeader *prev = (RecordHeader*)prevBuffer;
 
+            long nextPos = prev->next;
+            long lastValidPos = prevPos;
+
+            while (nextPos != -1)
+            {
+                fseek(dataFile, nextPos, SEEK_SET);
+                fread(currBuffer, recordSize, 1, dataFile);
+                RecordHeader *nextRec = (RecordHeader*)currBuffer;
+
+                if (nextRec->id > rec->id)
+                    break;
+
+                lastValidPos = nextPos;
+                nextPos = nextRec->next;
+            }
+
+            fseek(dataFile, lastValidPos, SEEK_SET);
+            fread(prevBuffer, recordSize, 1, dataFile);
+            prev = (RecordHeader*)prevBuffer;
+
             rec->next = prev->next;
             prev->next = newPos;
 
-            fseek(dataFile, prevPos, SEEK_SET);
+            fseek(dataFile, lastValidPos, SEEK_SET);
             fwrite(prev, recordSize, 1, dataFile);
 
             fseek(dataFile, newPos, SEEK_SET);
             fwrite(rec, recordSize, 1, dataFile);
+
             printf("Inserted record ID %lld after ID %lld\n", rec->id, prev->id);
             goto cleanup;
         }
+    }
+
+    // ligar final extensão de head lógica
+    if (insertAfterHead)
+    {
+        long currPos = *headPtr;
+        unsigned char *buffer = malloc(recordSize);
+        if (!buffer)
+            goto cleanup;
+
+        RecordHeader *curr = (RecordHeader*)buffer;
+
+        while (1)
+        {
+            fseek(dataFile, currPos, SEEK_SET);
+            fread(buffer, recordSize, 1, dataFile);
+
+            if (curr->next == -1)
+                break;
+
+            currPos = curr->next;
+        }
+
+        curr->next = newPos;
+
+        fseek(dataFile, currPos, SEEK_SET);
+        fwrite(buffer, recordSize, 1, dataFile);
+
+        fseek(dataFile, newPos, SEEK_SET);
+        fwrite(rec, recordSize, 1, dataFile);
+
+        printf("Appended record ID %lld after ID %lld (end of head chain)\n",
+               rec->id, curr->id);
+
+        free(buffer);
     }
 
 cleanup:

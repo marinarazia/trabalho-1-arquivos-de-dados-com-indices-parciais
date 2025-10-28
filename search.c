@@ -126,7 +126,7 @@ int searchOrderById(const ll orderId)
 
     if (status.modificationsOrder)
     {
-		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Product));
+		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order));
     }
 
     ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);

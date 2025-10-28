@@ -7,14 +7,13 @@ void printOrder(const Order o)
 Product* createNewProduct()
 Order* createNewOrder()
 */
+
 static inline float toDollars(const int cents)
-
-
 {
     return cents / 100.0f;
 }
 
-static ll* getHeadPointer(const char* dataFileName)
+ll* getHeadPointer(const char* dataFileName)
 {
     if (strstr(dataFileName, PRODUCT_DAT))
         return &status.headProduct;
@@ -64,7 +63,7 @@ ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
     blockOffset = ie.position;
     fseek(dataFile, blockOffset, SEEK_SET);
 
-    printf("%lld", ie.id);
+    //printf("%lld", ie.id);
 
     return ie.id;
 }
@@ -127,6 +126,7 @@ Product* createNewProduct()
     printf("Inserir novo produto:\n");
     printf("ID do produto: ");
     scanf("%lld", &newProduct->id);
+    /*
     printf("ID da categoria: ");
     scanf("%lld", &newProduct->categoryId);
     printf("Alias da categoria: ");
@@ -139,6 +139,7 @@ Product* createNewProduct()
     getchar();
     printf("Genero (M/F/U): ");
     scanf(" %c", &newProduct->productGender);
+    */
 
     newProduct->active = '1';
     newProduct->next = -1;
