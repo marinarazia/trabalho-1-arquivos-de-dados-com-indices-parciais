@@ -126,7 +126,6 @@ Product* createNewProduct()
     printf("Inserir novo produto:\n");
     printf("ID do produto: ");
     scanf("%lld", &newProduct->id);
-    /*
     printf("ID da categoria: ");
     scanf("%lld", &newProduct->categoryId);
     printf("Alias da categoria: ");
@@ -139,7 +138,6 @@ Product* createNewProduct()
     getchar();
     printf("Genero (M/F/U): ");
     scanf(" %c", &newProduct->productGender);
-    */
 
     newProduct->active = '1';
     newProduct->next = -1;
