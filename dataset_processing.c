@@ -12,6 +12,7 @@ void convertTextToBinary()
 
 */
 
+// Todo: alterar para criar arvore ou hash
 int createIndex(const char *dataFile, 
                 const char *indexFile, 
                 const size_t recordSize)

@@ -4,6 +4,12 @@ Integrantes: Ricardo Alberti, Marina Razia Goulart Pacheco
 
 Comando para compilar: gcc main.c
 
+Todo: 
+ - criptografar 
+ - indice por hash em memoria
+ - indice por B-tree em memoria (talvez B+ seja mais fácil)
+ - cronometrar tempo de execução das operações e salvar numa tabela excel
+ - hash por lista linkado?
 */
 
 #include <stdio.h>
