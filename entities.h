@@ -1,15 +1,17 @@
-typedef struct {
-    int modificationsOrder;
-    int modificationsProduct;
-    ll headOrder;
-    ll headProduct;
-} Status;
+// B plus tree
+typedef struct BPTNode {
+    int isLeaf;
+    int numKeys;
+    long long keys[BPT_ORDER];
+    struct BPTNode *children[BPT_ORDER+1];  // internal nodes
+    long offsets[BPT_ORDER];                // leaf nodes
+    struct BPTNode *next;                   // leaf chaining
+    struct BPTNode *parent;                 // parent pointer
+} BPTNode;
 
-// -----------
-// B+
 typedef struct {
-
-} Node;
+    BPTNode *root;
+} BPTree;
 // -----------
 
 typedef struct {
@@ -46,4 +48,14 @@ typedef struct {
     ll next;
 } RecordHeader;
 
+typedef struct {
+    int modificationsOrder;
+    int modificationsProduct;
+    ll headOrder;
+    ll headProduct;
+} Status;
+
+
 extern Status status;
+extern BPTree productTree;
+extern BPTree orderTree;

@@ -11,7 +11,8 @@ int removeOrder(const ll orderId);
 int insert(const char* dataFileName, 
            const char* indexFileName, 
            const void* record,
-           const size_t recordSize)
+           const size_t recordSize,
+           BPTree* btree)
 {
     FILE *dataFile = fopen(dataFileName, "r+b");
     FILE *indexFile = fopen(indexFileName, "rb");
@@ -89,10 +90,15 @@ int insert(const char* dataFileName,
         }
     }
 
-    if (insertAfterHead)
-        fseek(dataFile, *headPtr, SEEK_SET); 
-    else
-        fseekSegmentOffset(dataFile, indexFile, rec->id);
+    fseek(dataFile, *headPtr, SEEK_SET); 
+    if (!insertAfterHead)
+    {
+#if USE_BTREE_INDEX
+    fseekBTreeOffset(dataFile, btree, rec->id);
+#else
+    fseekSegmentOffset(dataFile, indexFile, rec->id);
+#endif
+    }
 
     //inserir no meio
     long prevPos = -1;
@@ -198,14 +204,20 @@ int removeProduct(const ll productId)
         return 0;
     }
 
-    ll segLastId = fseekSegmentOffset(dataFile, indexFile, productId);
+#if USE_BTREE_INDEX
+    fseekBTreeOffset(dataFile, &productTree, productId);
+#else
+    fseekSegmentOffset(dataFile, indexFile, productId);
+#endif
 
     Product p;
     int found = 0;
-    long position = 0;
-
-    while (fread(&p, sizeof(Product), 1, dataFile) && p.id <= segLastId)
+    long position = ftell(dataFile);
+    int checked = 0;
+    while (fread(&p, sizeof(Product), 1, dataFile) && checked < SEGMENT_SIZE)
 	{
+        checked++;
+
         if (p.id == productId && p.active != '0') 
 		{
             p.active = '0';
@@ -241,14 +253,20 @@ int removeOrder(const ll orderId)
         return 0;
     }
 
-    ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);
+#if USE_BTREE_INDEX
+    fseekBTreeOffset(dataFile, &orderTree, orderId);
+#else
+    fseekSegmentOffset(dataFile, indexFile, orderId);
+#endif
 
     Order o;
     int found = 0;
-    long position = 0;
-
-    while (fread(&o, sizeof(Order), 1, dataFile) && o.id <= segLastId)
+    long position = ftell(dataFile);
+    int checked = 0;
+    while (fread(&o, sizeof(Order), 1, dataFile) && checked < SEGMENT_SIZE)
 	{
+        checked++;
+
         if (o.id == orderId && o.active != '0')
 		{
             o.active = '0';

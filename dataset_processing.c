@@ -15,7 +15,8 @@ void convertTextToBinary()
 // Todo: alterar para criar arvore ou hash
 int createIndex(const char *dataFile, 
                 const char *indexFile, 
-                const size_t recordSize)
+                const size_t recordSize, 
+                BPTree *bptree)
 {
     FILE *data = fopen(dataFile, "rb");
     FILE *index = fopen(indexFile, "wb");
@@ -37,17 +38,20 @@ int createIndex(const char *dataFile,
         return 0;
     }
 
+    *bptree = bpt_create();
+
+    // create partial index
     long segmentStart = 0;
     int count = 0;
-
     ll lastId = -1;
-
     while (fread(record, recordSize, 1, data) == 1)
     {
-        ll id = *(ll *)record;
-        lastId = id;
+        long currentOffset = ftell(data) - recordSize;
+        long long id = *(long long*)
+        record; lastId = id;
         count++;
 
+        bpt_insert(bptree, id, currentOffset);
         if (count % SEGMENT_SIZE == 0)
         {
             Index idx = { lastId, segmentStart };
@@ -73,7 +77,8 @@ int createIndex(const char *dataFile,
 
 void reorganizeFile(const char* dataFile, 
                     const char* indexFile, 
-                    const size_t recordSize)
+                    const size_t recordSize,
+                    BPTree *bptree)
 {
     printf("Reorganizando arquivo %s...\n", dataFile);
 
@@ -180,7 +185,7 @@ void reorganizeFile(const char* dataFile,
         fclose(statusFile);
     }
 
-    createIndex(dataFile, indexFile, recordSize);
+    createIndex(dataFile, indexFile, recordSize, bptree);
     printf("Reorganização de %s concluída com sucesso.\n", dataFile);
 }
 

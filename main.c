@@ -7,7 +7,6 @@ Comando para compilar:
 gcc main.c -lsodium
 
 Todo: 
- - criptografar 
  - indice por hash em memoria
  - indice por B-tree em memoria (talvez B+ seja mais fácil)
  - cronometrar tempo de execução das operações e salvar numa tabela excel
@@ -22,6 +21,7 @@ Todo:
 #include "config.h"
 #include "entities.h"
 #include "crypt.c"
+#include "bpt_index.c"
 #include "helper.c"
 #include "partition_merge.c"
 #include "dataset_processing.c"
@@ -29,6 +29,8 @@ Todo:
 #include "write.c"
 
 Status status = { 0 };
+BPTree productTree = { 0 };
+BPTree orderTree = { 0 };
 
 void setupFiles(); 
 
@@ -49,14 +51,14 @@ int main()
     do {
         printf("\n--- MENU ---\n");
         printf("1  - Listar ordens de compra\n");
-        printf("2  - Listar produtos\n");
-        printf("3  - Pesquisar compras de usuario\n");
+        printf("2  - Listar produtos\n\n");
+        printf("3  - Pesquisar compras de usuario\n\n");
         printf("4  - Pesquisar produto por id\n");
-        printf("5  - Pesquisar ordem por id\n");
+        printf("5  - Pesquisar ordem por id\n\n");
         printf("6  - Inserir produto\n");
-        printf("7  - Inserir ordem de compra\n");
+        printf("7  - Inserir ordem de compra\n\n");
         printf("8  - Remover ordem de compra\n");
-        printf("9  - Remover produto\n");
+        printf("9  - Remover produto\n\n");
         printf("10 - Reorganizar arquivo\n");
         printf("0  - Sair\n");
         printf("Escolha: ");
@@ -91,11 +93,11 @@ int main()
 			    searchOrderById(inputId);
                 break;
 			case 6:
-                insert(PRODUCT_DAT, PRODUCT_INDEX, createNewProduct(), sizeof(Product));
+                insert(PRODUCT_DAT, PRODUCT_INDEX, createNewProduct(), sizeof(Product), &productTree);
                 status.modificationsProduct++;
                 break;
 			case 7:
-                insert(ORDER_DAT, ORDER_INDEX, createNewOrder(), sizeof(Order));
+                insert(ORDER_DAT, ORDER_INDEX, createNewOrder(), sizeof(Order), &orderTree);
                 status.modificationsOrder++;
                 break;
 			case 8:
@@ -111,8 +113,8 @@ int main()
                 status.modificationsProduct++;
 			    break;
 			case 10:
-				reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
-				reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order));
+				reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
+				reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
 				break;    
 		}
 	} while (option != 0);
@@ -162,10 +164,10 @@ void setupFiles()
         int productTmps = createSortedTemps(PRODUCT_DAT, sizeof(Product), compareProduct);
         mergeAllTemps(productTmps, sizeof(Product), compareProduct, PRODUCT_DAT);
         removeDuplicateProducts(PRODUCT_DAT);
-
-        createIndex(ORDER_DAT, ORDER_INDEX, sizeof(Order));
-        createIndex(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
     }
+
+    reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
+    reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
 
     if (binOrder) fclose(binOrder);
     if (binProduct) fclose(binProduct);

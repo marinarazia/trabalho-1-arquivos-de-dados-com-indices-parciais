@@ -22,9 +22,23 @@ ll* getHeadPointer(const char* dataFileName)
     return NULL;
 }
 
+ll fseekBTreeOffset(FILE* dataFile, BPTree* tree, const long long id)
+{
+    printf("PESQUISA COM B+\n");
+    long offset = bpt_search(tree, id);
+    if (offset != -1) {
+        fseek(dataFile, offset, SEEK_SET);
+        return offset;
+    }
+
+    return -1;
+}
+
 // fseek into to the right segment based on the id with binary search
+// return last id of segment
 ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
 {
+    printf("PESQUISA COM ÍNDICE PARCIAL\n");
     long blockOffset = 0;
     Index ie;
     long left = 0, right;
@@ -71,7 +85,7 @@ void printProduct(const Product p)
     const char* aliasToPrint = p.categoryAlias;
     char* dec = NULL;
 
-#if DECRYPT_ON_READ == 1
+#if DECRYPT_ON_READ
     dec = decrypt_string(p.categoryAlias);
     aliasToPrint = dec;
 #endif
@@ -86,7 +100,7 @@ void printProduct(const Product p)
            p.productGender,
            p.next);
 
-#if DECRYPT_ON_READ == 1
+#if DECRYPT_ON_READ
     free(dec);
 #endif
 }
@@ -140,7 +154,14 @@ Product* createNewProduct()
     printf("ID da categoria: ");
     scanf("%lld", &newProduct->categoryId);
     printf("Alias da categoria: ");
+
     scanf("%s", newProduct->categoryAlias);
+
+    // encrypt categoryAlias
+    char* enc = encrypt_string(newProduct->categoryAlias);
+    strncpy(newProduct->categoryAlias, enc, sizeof(newProduct->categoryAlias) - 1);
+    free(enc);
+
     printf("ID da marca: ");
     scanf("%lld", &newProduct->brandId);
     printf("Preco (ex: 29.99): ");

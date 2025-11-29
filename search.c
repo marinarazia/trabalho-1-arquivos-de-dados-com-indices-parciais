@@ -59,16 +59,19 @@ int searchProductById(const ll productId)
         return 0;
     }
 
-    ll segLastId = fseekSegmentOffset(dataFile, indexFile, productId);
+#if USE_BTREE_INDEX
+    fseekBTreeOffset(dataFile, &productTree, productId);
+#else
+    fseekSegmentOffset(dataFile, indexFile, productId);
+#endif
 
     printf("Buscando produto ID %lld...\n", productId);
 
     Product p;
     int found = 0;
     int checked = 0;
-
     printf("\nSEGMENTO:\n");
-    while (fread(&p, sizeof(Product), 1, dataFile) && p.id <= segLastId) 
+    while (fread(&p, sizeof(Product), 1, dataFile) && checked < SEGMENT_SIZE) 
 	{
         checked++;
         
@@ -96,14 +99,11 @@ int searchProductById(const ll productId)
 	{
         printf("\nPRODUTO ENCONTRADO\n");
         printProduct(p);
-    }
-    else
-    {
-        printf("Produto ID %lld nao encontrado.\n", productId);
+        return found;
     }
 
+    printf("Produto ID %lld nao encontrado.\n", productId);
     printf("Foram verificados %d registros.\n", checked);
-
     fclose(dataFile);
     return found;
 }
@@ -119,16 +119,19 @@ int searchOrderById(const ll orderId)
         return 0;
     }
 
-    ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);
+#if USE_BTREE_INDEX
+    fseekBTreeOffset(dataFile, &orderTree, orderId);
+#else
+    fseekSegmentOffset(dataFile, indexFile, orderId);
+#endif
 
     printf("Buscando pedido ID %lld...\n", orderId);
 
     Order o;
     int found = 0;
     int checked = 0;
-
     printf("\nSEGMENTO:\n");
-    while (fread(&o, sizeof(Order), 1, dataFile) && o.id <= segLastId)
+    while (fread(&o, sizeof(Order), 1, dataFile) && checked < SEGMENT_SIZE)
     {
         checked++;
         printOrder(o);
