@@ -50,6 +50,11 @@ void listProducts(const int limit)
 
 int searchProductById(const ll productId)
 {
+    if (status.modificationsProduct)
+    {
+        reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
+    }
+
     FILE *dataFile = fopen(PRODUCT_DAT, "r+b");
     FILE *indexFile = fopen(PRODUCT_INDEX, "rb");
     if (!dataFile || !indexFile)
@@ -110,6 +115,11 @@ int searchProductById(const ll productId)
 
 int searchOrderById(const ll orderId)
 {
+    if (status.modificationsOrder)
+    {
+		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
+    }
+
     FILE *dataFile = fopen(ORDER_DAT, "r+b");
     FILE *indexFile = fopen(ORDER_INDEX, "rb");
     if (!dataFile || !indexFile)
