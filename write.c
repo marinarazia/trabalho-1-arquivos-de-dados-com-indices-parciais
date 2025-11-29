@@ -8,7 +8,6 @@ int removeProduct(const ll productId);
 int removeOrder(const ll orderId);
 */
 
-//agora vai
 int insert(const char* dataFileName, 
            const char* indexFileName, 
            const void* record,
@@ -226,11 +225,9 @@ int removeProduct(const ll productId)
         printf("Produto ID %lld marcado como excluido.\n", productId);
         return 1;
     }
-	else
-	{
-        printf("Produto ID %lld nao encontrado ou ja excluido.\n", productId);
-        return 0;
-    }
+
+    printf("Produto ID %lld nao encontrado ou ja excluido.\n", productId);
+    return 0;
 }
 
 int removeOrder(const ll orderId)
@@ -263,7 +260,6 @@ int removeOrder(const ll orderId)
         position = ftell(dataFile);
     }
     
-
     fclose(dataFile);
     fclose(indexFile);
 
@@ -272,9 +268,7 @@ int removeOrder(const ll orderId)
         printf("Pedido ID %lld marcado como excluido.\n", orderId);
         return 1;
     }
-	else
-	{
-        printf("Pedido ID %lld nao encontrado ou ja excluido.\n", orderId);
-        return 0;
-    }
+
+    printf("Pedido ID %lld nao encontrado ou ja excluido.\n", orderId);
+    return 0;
 }

@@ -5,6 +5,13 @@ typedef struct {
     ll headProduct;
 } Status;
 
+// -----------
+// B+
+typedef struct {
+
+} Node;
+// -----------
+
 typedef struct {
     ll id; // id of last record in the segment
     long position; // segment start position

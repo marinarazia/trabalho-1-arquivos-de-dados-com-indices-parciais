@@ -1,11 +1,11 @@
 /*
-static inline float toDollars(const int cents)
-static ll* getHeadPointer(const char* dataFileName)
-ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
-void printProduct(const Product p)
-void printOrder(const Order o)
+float    toDollars(const int cents)
+ ll*     getHeadPointer(const char* dataFileName)
+ll       fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
+void     printProduct(const Product p)
+void     printOrder(const Order o)
 Product* createNewProduct()
-Order* createNewOrder()
+Order*   createNewOrder()
 */
 
 static inline float toDollars(const int cents)
@@ -63,21 +63,32 @@ ll fseekSegmentOffset(FILE* dataFile, FILE* indexFile, const ll id)
     blockOffset = ie.position;
     fseek(dataFile, blockOffset, SEEK_SET);
 
-    //printf("%lld", ie.id);
-
     return ie.id;
 }
 
 void printProduct(const Product p)
 {
-    printf("ProdutoID: %lld | MarcaID: %lld | Preco: %.2f | CategoriaID: %lld | CategoriaAlias: %s | Genero: %c | Elo: %lld\n",
+    const char* aliasToPrint = p.categoryAlias;
+    char* dec = NULL;
+
+#if DECRYPT_ON_READ == 1
+    dec = decrypt_string(p.categoryAlias);
+    aliasToPrint = dec;
+#endif
+
+    printf("ProdutoID: %lld | MarcaID: %lld | Preco: %.2f | "
+           "CategoriaID: %lld | CategoriaAlias: %s | Genero: %c | Elo: %lld\n",
            p.id,
            p.brandId,
            toDollars(p.price),
            p.categoryId,
-           p.categoryAlias,
+           aliasToPrint,
            p.productGender,
            p.next);
+
+#if DECRYPT_ON_READ == 1
+    free(dec);
+#endif
 }
 
 void printOrder(const Order o)

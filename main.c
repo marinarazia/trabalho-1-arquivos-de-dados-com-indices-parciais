@@ -2,7 +2,9 @@
 
 Integrantes: Ricardo Alberti, Marina Razia Goulart Pacheco
 
-Comando para compilar: gcc main.c
+Comando para compilar:
+
+gcc main.c -lsodium
 
 Todo: 
  - criptografar 
@@ -19,6 +21,7 @@ Todo:
 
 #include "config.h"
 #include "entities.h"
+#include "crypt.c"
 #include "helper.c"
 #include "partition_merge.c"
 #include "dataset_processing.c"
@@ -31,6 +34,12 @@ void setupFiles();
 
 int main() 
 {
+    if (sodium_init() < 0) 
+    {
+        printf("Erro ao iniciar biblioteca de criptografia");
+        return 1;
+    }
+
     int option;
     int limit;
     ll inputId;

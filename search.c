@@ -1,9 +1,9 @@
 /*
 void listOrders(const int limit);
 void listProducts(const int limit);
-int searchProductById(const ll productId);
-int searchOrderById(const ll orderId);
-int searchOrdersByUser(const ll userId);
+int  searchProductById(const ll productId);
+int  searchOrderById(const ll orderId);
+int  searchOrdersByUser(const ll userId);
 */
 
 void listOrders(const int limit)
@@ -57,11 +57,6 @@ int searchProductById(const ll productId)
         if (dataFile) fclose(dataFile);
         if (indexFile) fclose(indexFile);
         return 0;
-    }
-
-    if (status.modificationsProduct)
-    {
-		reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product));
     }
 
     ll segLastId = fseekSegmentOffset(dataFile, indexFile, productId);
@@ -124,11 +119,6 @@ int searchOrderById(const ll orderId)
         return 0;
     }
 
-    if (status.modificationsOrder)
-    {
-		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order));
-    }
-
     ll segLastId = fseekSegmentOffset(dataFile, indexFile, orderId);
 
     printf("Buscando pedido ID %lld...\n", orderId);
@@ -183,11 +173,6 @@ int searchOrdersByUser(const ll userId)
     FILE *dataFile = fopen(ORDER_DAT, "rb");
     if (!dataFile) return 0;
 
-    if (status.modificationsOrder)
-    {
-		reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Product));
-    }
-
     Order o;
     int found = 0;
     while (fread(&o, sizeof(Order), 1, dataFile))
@@ -204,8 +189,6 @@ int searchOrdersByUser(const ll userId)
         printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
     }
 
-
     fclose(dataFile);
     return found;
 }
-

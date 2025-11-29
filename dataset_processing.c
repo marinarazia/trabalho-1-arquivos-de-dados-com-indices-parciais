@@ -242,6 +242,11 @@ void convertTextToBinary()
         //product
         p.categoryId = strlen(cols[4]) ? atoll(cols[4]) : -1;
         strncpy(p.categoryAlias, cols[5], MAX_CATEGORY_ALIAS-1);
+
+        char* enc = encrypt_string(p.categoryAlias);
+        strncpy(p.categoryAlias, enc, sizeof(p.categoryAlias) - 1);
+        free(enc);
+
         p.brandId = strlen(cols[6]) ? atoll(cols[6]) : -1;
         float priceFloat = strlen(cols[7]) ? atof(cols[7]) : 0.0f;
         p.price = (int)(priceFloat * 100);
