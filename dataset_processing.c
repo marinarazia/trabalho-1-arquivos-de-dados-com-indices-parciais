@@ -11,8 +11,124 @@ void reorganizeFile(const char* dataFile,
 void convertTextToBinary()
 
 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "entities.h"
+#include "config.h"
+#include "bpt_index.h"
+#include "crypt.h"
 
-// Todo: alterar para criar arvore ou hash
+int hashFunction(ll key, int tableSize) 
+{
+    return key % tableSize;
+}
+
+HashTable* createHashTable(int size) 
+{
+    HashTable *ht = (HashTable*)malloc(sizeof(HashTable));
+    ht->size = size;
+    ht->count = 0;
+    ht->table = (HashEntry**)calloc(size, sizeof(HashEntry*));
+    return ht;
+}
+
+void hashInsert(HashTable *ht, ll key, long offset) 
+{
+    int index = hashFunction(key, ht->size);
+    HashEntry *new_entry = (HashEntry*)malloc(sizeof(HashEntry));
+    new_entry->key = key;
+    new_entry->file_offset = offset;
+    new_entry->next = NULL;
+    
+    // Encadeamento externo para resolução de colisões
+    if (ht->table[index] == NULL) 
+    {
+        ht->table[index] = new_entry;
+    } else 
+    {
+        HashEntry *current = ht->table[index];
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_entry;
+    }
+    ht->count++;
+}
+
+HashTable* createHashIndex(const char *dataFile, int tableSize) 
+{
+    FILE *data = fopen(dataFile, "rb");
+    if (!data) return NULL;
+    
+    HashTable *ht = createHashTable(tableSize);
+    void *record = malloc(sizeof(Order));
+    if (!record) 
+    {
+        fclose(data);
+        free(ht);
+        return NULL;
+    }
+    
+    clock_t start = clock();
+    
+    while (fread(record, sizeof(Order), 1, data) == 1) 
+    {
+        Order *o = (Order*)record;
+        if (o->userId > 0 && o->active != '0') 
+        { 
+            hashInsert(ht, o->userId, ftell(data) - sizeof(Order));
+        }
+    }
+    
+    clock_t end = clock();
+    double time_spent = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Índice Hash criado em %.4f segundos\n", time_spent);
+    printf("Tamanho da tabela: %d, Elementos inseridos: %d\n", ht->size, ht->count);
+    
+    free(record);
+    fclose(data);
+    return ht;
+}
+
+HashEntry* hashSearch(HashTable *ht, ll key) 
+{
+    if (!ht) return NULL;
+    
+    int index = hashFunction(key, ht->size);
+    HashEntry *current = ht->table[index];
+    
+    while (current != NULL) 
+    {
+        if (current->key == key) 
+        {
+            return current;
+        }
+        current = current->next;
+    }
+    
+    return NULL;
+}
+
+void freeHashTable(HashTable *ht) 
+{
+    if (!ht) return;
+    
+    for (int i = 0; i < ht->size; i++) 
+    {
+        HashEntry *current = ht->table[i];
+        while (current != NULL) 
+        {
+            HashEntry *temp = current;
+            current = current->next;
+            free(temp);
+        }
+    }
+    free(ht->table);
+    free(ht);
+}
+
 int createIndex(const char *dataFile, 
                 const char *indexFile, 
                 const size_t recordSize, 

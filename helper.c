@@ -8,6 +8,14 @@ Product* createNewProduct()
 Order*   createNewOrder()
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "entities.h"
+#include "config.h"
+#include "bpt_index.h"
+#include "crypt.h"
+
 static inline float toDollars(const int cents)
 {
     return cents / 100.0f;

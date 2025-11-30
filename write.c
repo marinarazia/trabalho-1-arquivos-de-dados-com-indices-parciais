@@ -8,6 +8,13 @@ int removeProduct(const ll productId);
 int removeOrder(const ll orderId);
 */
 
+#include "entities.h"
+#include "config.h"
+#include "helper.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 int insert(const char* dataFileName, 
            const char* indexFileName, 
            const void* record,

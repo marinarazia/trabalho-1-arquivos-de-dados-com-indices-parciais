@@ -1,3 +1,9 @@
+#ifndef ENTITIES_H
+#define ENTITIES_H
+
+#include "config.h"
+#include <time.h> // para time_t
+
 // B plus tree
 typedef struct BPTNode {
     int isLeaf;
@@ -12,7 +18,18 @@ typedef struct BPTNode {
 typedef struct {
     BPTNode *root;
 } BPTree;
-// -----------
+
+typedef struct HashEntry {
+    ll key;
+    long file_offset;
+    struct HashEntry *next;
+} HashEntry;
+
+typedef struct {
+    int size;
+    int count;
+    HashEntry **table;
+} HashTable;
 
 typedef struct {
     ll id; // id of last record in the segment
@@ -59,3 +76,6 @@ typedef struct {
 extern Status status;
 extern BPTree productTree;
 extern BPTree orderTree;
+extern HashTable *productHashTable;
+
+#endif // ENTITIES_H

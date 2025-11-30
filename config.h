@@ -1,3 +1,8 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include <time.h>
+
 #define DEBUG 0
 
 // Dataset source
@@ -30,3 +35,5 @@
 #define MAX_MODIFICATIONS 1000
 #define MAX_CATEGORY_ALIAS 256
 #define ll long long
+
+#endif // CONFIG_H

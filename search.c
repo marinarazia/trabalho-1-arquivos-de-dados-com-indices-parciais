@@ -6,6 +6,12 @@ int  searchOrderById(const ll orderId);
 int  searchOrdersByUser(const ll userId);
 */
 
+#include "dataset_processing.h"
+#include "entities.h"
+#include "helper.h"
+#include <stdlib.h>
+#include <stdio.h>
+
 void listOrders(const int limit)
 {
     FILE *binOrder = fopen(ORDER_DAT, "rb");
@@ -46,6 +52,64 @@ void listProducts(const int limit)
         if (limit && ++count >= limit) break;
     }
     fclose(binProduct);
+}
+
+int searchOrdersByUserHash(HashTable *ht, ll userId) 
+{
+    if (!ht) 
+    {
+        printf("Indice hash nao carregado.\n");
+        return 0;
+    }
+    
+    FILE *dataFile = fopen(ORDER_DAT, "rb");
+    if (!dataFile) 
+    {
+        printf("Erro ao abrir arquivo de ordens.\n");
+        return 0;
+    }
+    
+    clock_t start = clock();
+    
+    HashEntry *entry = hashSearch(ht, userId);
+    int found = 0;
+    
+    if (entry)
+    {
+        printf("PEDIDOS ENCONTRADOS (via Hash) para usuario %lld:\n", userId);
+        
+        // Buscar todos os registros com a mesma chave (resoluÃ§Ã£o de colisÃµes)
+        HashEntry *current = ht->table[hashFunction(userId, ht->size)];
+        while (current != NULL) 
+        {
+            if (current->key == userId) 
+            {
+                fseek(dataFile, current->file_offset, SEEK_SET);
+                Order o;
+                if (fread(&o, sizeof(Order), 1, dataFile)) 
+                {
+                    if (o.active != '0' && o.userId == userId) 
+                    {
+                        printOrder(o);
+                        found++;
+                    }
+                }
+            }
+            current = current->next;
+        }
+    }
+    
+    clock_t end = clock();
+    double time_spent = ((double)(end - start)) / CLOCKS_PER_SEC;
+    
+    if (!found) {
+        printf("Nenhum pedido encontrado para o usuario %lld\n", userId);
+    } else {
+        printf("Tempo de busca com hash: %.4f segundos\n", time_spent);
+    }
+    
+    fclose(dataFile);
+    return found;
 }
 
 int searchProductById(const ll productId)
@@ -180,7 +244,7 @@ int searchOrderById(const ll orderId)
     return found;
 }
 
-// scan dataFile por não ter index de usuário
+// scan dataFile por nï¿½o ter index de usuï¿½rio
 int searchOrdersByUser(const ll userId)
 {
     FILE *dataFile = fopen(ORDER_DAT, "rb");

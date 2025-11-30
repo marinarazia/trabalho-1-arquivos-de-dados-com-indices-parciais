@@ -13,26 +13,39 @@ Todo:
  - hash por lista linkado?
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <time.h>
+//
+//#include "config.h"
+//#include "entities.h"
+//#include "crypt.c"
+//#include "bpt_index.c"
+//#include "helper.c"
+//#include "partition_merge.c"
+//#include "dataset_processing.c"
+//#include "search.c"
+//#include "write.c"
 
-#include "config.h"
-#include "entities.h"
-#include "crypt.c"
-#include "bpt_index.c"
-#include "helper.c"
-#include "partition_merge.c"
-#include "dataset_processing.c"
-#include "search.c"
-#include "write.c"
+#include "crypt.h"
+#include "bpt_index.h"
+#include "helper.h"
+#include "dataset_processing.h"
+#include "search.h"
+#include "partition_merge.h"
+#include "write.h"
+#include "search.h"
+
+#include <sodium.h>
 
 Status status = { 0 };
 BPTree productTree = { 0 };
 BPTree orderTree = { 0 };
+HashTable *userHashTable = NULL;
 
 void setupFiles(); 
+void benchmarkSearches();
 
 int main() 
 {
@@ -48,6 +61,9 @@ int main()
 
     setupFiles();
 
+    printf("Criando indice hash em memoria...\n");
+    userHashTable = createHashIndex(ORDER_DAT, 1000);
+
     do {
         printf("\n--- MENU ---\n");
         printf("1  - Listar ordens de compra\n");
@@ -60,6 +76,7 @@ int main()
         printf("8  - Remover ordem de compra\n");
         printf("9  - Remover produto\n\n");
         printf("10 - Reorganizar arquivo\n");
+        printf("11 - Benchmark de buscas\n");
         printf("0  - Sair\n");
         printf("Escolha: ");
         scanf("%d", &option);
@@ -99,6 +116,11 @@ int main()
 			case 7:
                 insert(ORDER_DAT, ORDER_INDEX, createNewOrder(), sizeof(Order), &orderTree);
                 status.modificationsOrder++;
+                if (userHashTable) 
+                {
+                    freeHashTable(userHashTable);
+                    userHashTable = createHashIndex(ORDER_DAT, 1000);
+                }
                 break;
 			case 8:
 			    printf("Digite o ID do pedido para remover: ");
@@ -116,6 +138,9 @@ int main()
 				reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
 				reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
 				break;    
+            case 11:
+                benchmarkSearches();
+                break;
 		}
 	} while (option != 0);
 
@@ -126,7 +151,41 @@ int main()
         fclose(binStatus);
     }
 
+    if (userHashTable) 
+    {
+        freeHashTable(userHashTable);
+    }
     return 0;
+}
+
+void benchmarkSearches() {
+    printf("\nBENCHMARK DE BUSCAS \n");
+    
+    ll testUsers[] = {1515915625216376356, 1515915625150215144, 1515915625118578609};
+    int numTests = 5;
+    
+    for (int i = 0; i < numTests; i++) {
+        printf("\n--- Teste %d: Usuário %lld ---\n", i+1, testUsers[i]);
+        
+        // Busca com scan (original)
+        printf("Busca com SCAN:\n");
+        clock_t start = clock();
+        int foundScan = searchOrdersByUser(testUsers[i]);
+        clock_t end = clock();
+        double timeScan = ((double)(end - start)) / CLOCKS_PER_SEC;
+        printf("Tempo SCAN: %.4f segundos\n", timeScan);
+        
+        // Busca com hash
+        printf("Busca com HASH:\n");
+        start = clock();
+        int foundHash = searchOrdersByUserHash(userHashTable, testUsers[i]);
+        end = clock();
+        double timeHash = ((double)(end - start)) / CLOCKS_PER_SEC;
+        printf("Tempo HASH: %.4f segundos\n", timeHash);
+        
+        printf("Resultados: SCAN=%d registros, HASH=%d registros\n", foundScan, foundHash);
+        printf("Hash foi %.2fx mais rápido\n", timeScan / timeHash);
+    }
 }
 
 void setupFiles()
