@@ -1,9 +1,3 @@
-#ifndef ENTITIES_H
-#define ENTITIES_H
-
-#include "config.h"
-#include <time.h> // para time_t
-
 // B plus tree
 typedef struct BPTNode {
     int isLeaf;
@@ -76,6 +70,4 @@ typedef struct {
 extern Status status;
 extern BPTree productTree;
 extern BPTree orderTree;
-extern HashTable *productHashTable;
-
-#endif // ENTITIES_H
+extern HashTable *hashTable;

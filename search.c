@@ -6,12 +6,6 @@ int  searchOrderById(const ll orderId);
 int  searchOrdersByUser(const ll userId);
 */
 
-#include "dataset_processing.h"
-#include "entities.h"
-#include "helper.h"
-#include <stdlib.h>
-#include <stdio.h>
-
 void listOrders(const int limit)
 {
     FILE *binOrder = fopen(ORDER_DAT, "rb");
@@ -244,7 +238,7 @@ int searchOrderById(const ll orderId)
     return found;
 }
 
-// scan dataFile por n�o ter index de usu�rio
+// scan dataFile por não ter index de usuário
 int searchOrdersByUser(const ll userId)
 {
     FILE *dataFile = fopen(ORDER_DAT, "rb");

@@ -11,14 +11,6 @@ void reorganizeFile(const char* dataFile,
 void convertTextToBinary()
 
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include "entities.h"
-#include "config.h"
-#include "bpt_index.h"
-#include "crypt.h"
 
 int hashFunction(ll key, int tableSize) 
 {

@@ -1,8 +1,4 @@
 
-#include "entities.h"
-#include "config.h"
-#include <stdlib.h>
-
 BPTree bpt_create()
 {
     BPTree tree;

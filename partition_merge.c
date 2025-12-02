@@ -18,10 +18,6 @@ int createSortedTemps(const char *inputFile,
                       const size_t recordSize,
                       const int (*comparator)(const void *, const void *))
 */
-#include "entities.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int compareOrder(const void *a, const void *b)
 {

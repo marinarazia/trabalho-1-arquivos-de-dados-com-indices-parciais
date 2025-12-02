@@ -1,6 +1,4 @@
-#include "config.h"
 #include <sodium.h>
-#include <string.h>
  
 // algoritmo usado: XSalsa20-Poly1305 (criptografia simétrica autenticada)
 

@@ -2,50 +2,38 @@
 
 Integrantes: Ricardo Alberti, Marina Razia Goulart Pacheco
 
+Dependências:
+
+https://doc.libsodium.org/doc/installation
+
 Comando para compilar:
 
 gcc main.c -lsodium
 
-Todo: 
- - indice por hash em memoria
- - indice por B-tree em memoria (talvez B+ seja mais fácil)
- - cronometrar tempo de execução das operações e salvar numa tabela excel
- - hash por lista linkado?
 */
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <time.h>
-//
-//#include "config.h"
-//#include "entities.h"
-//#include "crypt.c"
-//#include "bpt_index.c"
-//#include "helper.c"
-//#include "partition_merge.c"
-//#include "dataset_processing.c"
-//#include "search.c"
-//#include "write.c"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-#include "crypt.h"
-#include "bpt_index.h"
-#include "helper.h"
-#include "dataset_processing.h"
-#include "search.h"
-#include "partition_merge.h"
-#include "write.h"
-#include "search.h"
-
-#include <sodium.h>
+#include "config.h"
+#include "entities.h"
+#include "crypt.c"
+#include "bpt_index.c"
+#include "helper.c"
+#include "partition_merge.c"
+#include "dataset_processing.c"
+#include "search.c"
+#include "write.c"
+#include "test.c"
 
 Status status = { 0 };
 BPTree productTree = { 0 };
 BPTree orderTree = { 0 };
-HashTable *userHashTable = NULL;
+HashTable *hashTable = NULL;
 
 void setupFiles(); 
-void benchmarkSearches();
 
 int main() 
 {
@@ -62,21 +50,22 @@ int main()
     setupFiles();
 
     printf("Criando indice hash em memoria...\n");
-    userHashTable = createHashIndex(ORDER_DAT, 1000);
+    hashTable = createHashIndex(ORDER_DAT, 1000);
 
     do {
         printf("\n--- MENU ---\n");
         printf("1  - Listar ordens de compra\n");
         printf("2  - Listar produtos\n\n");
         printf("3  - Pesquisar compras de usuario\n\n");
-        printf("4  - Pesquisar produto por id\n");
-        printf("5  - Pesquisar ordem por id\n\n");
-        printf("6  - Inserir produto\n");
-        printf("7  - Inserir ordem de compra\n\n");
-        printf("8  - Remover ordem de compra\n");
-        printf("9  - Remover produto\n\n");
-        printf("10 - Reorganizar arquivo\n");
-        printf("11 - Benchmark de buscas\n");
+        printf("4  - Pesquisar compras de usuario com Hash\n\n");
+        printf("5  - Pesquisar produto por id\n");
+        printf("6  - Pesquisar ordem por id\n\n");
+        printf("7  - Inserir produto\n");
+        printf("8  - Inserir ordem de compra\n\n");
+        printf("9  - Remover ordem de compra\n");
+        printf("10  - Remover produto\n\n");
+        printf("11 - Reorganizar arquivo\n");
+        printf("12 - Benchmark de buscas\n");
         printf("0  - Sair\n");
         printf("Escolha: ");
         scanf("%d", &option);
@@ -100,46 +89,46 @@ int main()
                 searchOrdersByUser(inputId);
                 break;
             case 4:
+                printf("Digite o ID do usuario: ");
+                scanf("%lld", &inputId);
+                searchOrdersByUserHash(hashTable, inputId);
+                break;
+            case 5:
                 printf("Digite o ID do produto: ");
                 scanf("%lld", &inputId);
             	searchProductById(inputId);
                 break;
-            case 5:
+            case 6:
             	printf("Digite o ID do pedido: ");
 			    scanf("%lld", &inputId);
 			    searchOrderById(inputId);
                 break;
-			case 6:
+			case 7:
                 insert(PRODUCT_DAT, PRODUCT_INDEX, createNewProduct(), sizeof(Product), &productTree);
                 status.modificationsProduct++;
                 break;
-			case 7:
+			case 8:
                 insert(ORDER_DAT, ORDER_INDEX, createNewOrder(), sizeof(Order), &orderTree);
                 status.modificationsOrder++;
-                if (userHashTable) 
-                {
-                    freeHashTable(userHashTable);
-                    userHashTable = createHashIndex(ORDER_DAT, 1000);
-                }
                 break;
-			case 8:
+			case 9:
 			    printf("Digite o ID do pedido para remover: ");
 			    scanf("%lld", &inputId);
 			    removeOrder(inputId);
                 status.modificationsOrder++;
 			    break;
-			case 9:
+			case 10:
 			    printf("Digite o ID do produto para remover: ");
 			    scanf("%lld", &inputId);
 			    removeProduct(inputId);
                 status.modificationsProduct++;
 			    break;
-			case 10:
+			case 11:
 				reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
 				reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
 				break;    
-            case 11:
-                benchmarkSearches();
+            case 12:
+                benchmark();
                 break;
 		}
 	} while (option != 0);
@@ -151,41 +140,7 @@ int main()
         fclose(binStatus);
     }
 
-    if (userHashTable) 
-    {
-        freeHashTable(userHashTable);
-    }
     return 0;
-}
-
-void benchmarkSearches() {
-    printf("\nBENCHMARK DE BUSCAS \n");
-    
-    ll testUsers[] = {1515915625216376356, 1515915625150215144, 1515915625118578609};
-    int numTests = 5;
-    
-    for (int i = 0; i < numTests; i++) {
-        printf("\n--- Teste %d: Usuário %lld ---\n", i+1, testUsers[i]);
-        
-        // Busca com scan (original)
-        printf("Busca com SCAN:\n");
-        clock_t start = clock();
-        int foundScan = searchOrdersByUser(testUsers[i]);
-        clock_t end = clock();
-        double timeScan = ((double)(end - start)) / CLOCKS_PER_SEC;
-        printf("Tempo SCAN: %.4f segundos\n", timeScan);
-        
-        // Busca com hash
-        printf("Busca com HASH:\n");
-        start = clock();
-        int foundHash = searchOrdersByUserHash(userHashTable, testUsers[i]);
-        end = clock();
-        double timeHash = ((double)(end - start)) / CLOCKS_PER_SEC;
-        printf("Tempo HASH: %.4f segundos\n", timeHash);
-        
-        printf("Resultados: SCAN=%d registros, HASH=%d registros\n", foundScan, foundHash);
-        printf("Hash foi %.2fx mais rápido\n", timeScan / timeHash);
-    }
 }
 
 void setupFiles()
