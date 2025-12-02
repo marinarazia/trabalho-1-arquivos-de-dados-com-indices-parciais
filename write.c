@@ -195,6 +195,11 @@ cleanup:
 //Todo: generalize remove function
 int removeProduct(const ll productId)
 {
+    if (status.modificationsProduct)
+    {
+        reorganizeFile(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
+    }
+
     FILE *dataFile = fopen(PRODUCT_DAT, "r+b");
     FILE *indexFile = fopen(PRODUCT_INDEX, "rb");
     if (!dataFile || !indexFile)
@@ -244,6 +249,11 @@ int removeProduct(const ll productId)
 
 int removeOrder(const ll orderId)
 {
+    if (status.modificationsOrder)
+    {
+        reorganizeFile(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
+    }
+
     FILE *dataFile = fopen(ORDER_DAT, "r+b");
     FILE *indexFile = fopen(ORDER_INDEX, "rb");
     if (!dataFile || !indexFile)

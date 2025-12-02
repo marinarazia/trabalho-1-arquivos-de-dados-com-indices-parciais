@@ -1,13 +1,13 @@
 // B plus tree
 typedef struct BPTNode {
-    int isLeaf;
-    int numKeys;
-    long long keys[BPT_ORDER];
-    struct BPTNode *children[BPT_ORDER+1];  // internal nodes
-    long offsets[BPT_ORDER];                // leaf nodes
-    struct BPTNode *next;                   // leaf chaining
-    struct BPTNode *parent;                 // parent pointer
-} BPTNode;
+    int isLeaf;  // 4B
+    int numKeys; // 4B
+    long long keys[BPT_ORDER]; 
+    struct BPTNode *children[BPT_ORDER+1];
+    long offsets[BPT_ORDER];  
+    struct BPTNode *next;     // 8B             
+    struct BPTNode *parent;   // 8B
+} BPTNode;  // ORDER 169 = 4096B cada nó
 
 typedef struct {
     BPTNode *root;

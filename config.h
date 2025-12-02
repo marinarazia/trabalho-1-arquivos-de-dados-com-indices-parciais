@@ -13,7 +13,7 @@
 #define PRODUCT_INDEX "productsIdx.bin"
 
 // B+ index
-#define BPT_ORDER 6
+#define BPT_ORDER 169
 #define USE_BTREE_INDEX 1
 
 // Hash index

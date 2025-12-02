@@ -17,7 +17,7 @@ void benchmark()
     double totalRemoveProd = 0;
     double totalRemoveOrder = 0;
 
-    for (int j = 0; j < 50; ++j)
+    for (int j = 0; j < 1; ++j)
     {
         for (int i = 0; i < numTests; ++i)
         {
@@ -49,33 +49,58 @@ void benchmark()
             totalOrderId += elapsed;
 
             // Inserts
-            Product newProduct = { 1, '1', 1, 1, 1, 1, '0', 1};
-            Order newOrder = { 2, '1', 1, 1, 1, time(NULL), 1};
+            Product* newProduct = malloc(sizeof(Product));
+            *newProduct = (Product){
+                .id = 1,
+                .active = '1',
+                .next = -1,
+                .categoryId = 1,
+                .brandId = 1,
+                .price = 100,            // 1.00
+                .productGender = 'M',
+                .categoryAlias = {0}
+            };
+
+            Order* newOrder = malloc(sizeof(Order));
+            *newOrder = (Order){
+                .id = 2,
+                .active = '1',
+                .next = -1,
+                .userId = 1,
+                .purchasedProductId = 1,
+                .dateTime = time(NULL),
+                .skuQty = 1
+            };
 
             start = clock();
-            insert(PRODUCT_DAT, PRODUCT_INDEX, &newProduct, sizeof(Product), &productTree);
+            insert(PRODUCT_DAT, PRODUCT_INDEX, newProduct, sizeof(Product), &productTree);
             end = clock();
             elapsed = (double)(end - start) / CLOCKS_PER_SEC;
             totalInsertProd += elapsed;
-
-            start = clock();
-            insert(ORDER_DAT, ORDER_INDEX, &newOrder, sizeof(Order), &orderTree);
-            end = clock();
-            elapsed = (double)(end - start) / CLOCKS_PER_SEC;
-            totalInsertOrder += elapsed;
+            status.modificationsProduct++;
 
             // Remoções
             start = clock();
-            removeProduct(newProduct.id);
+            removeProduct(newProduct->id);
             end = clock();
             elapsed = (double)(end - start) / CLOCKS_PER_SEC;
             totalRemoveProd += elapsed;
 
             start = clock();
-            removeOrder(newOrder.id);
+            insert(ORDER_DAT, ORDER_INDEX, newOrder, sizeof(Order), &orderTree);
+            end = clock();
+            elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+            totalInsertOrder += elapsed;
+            status.modificationsOrder++;
+
+            start = clock();
+            removeOrder(newOrder->id);
             end = clock();
             elapsed = (double)(end - start) / CLOCKS_PER_SEC;
             totalRemoveOrder += elapsed;
+
+            free(newOrder);
+            free(newProduct);
         }
     }
 
