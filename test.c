@@ -16,6 +16,8 @@ void benchmark()
     double totalInsertOrder = 0;
     double totalRemoveProd = 0;
     double totalRemoveOrder = 0;
+    double totalIndexProduct = 0;
+    double totalIndexOrder = 0;
 
     for (int j = 0; j < 1; ++j)
     {
@@ -99,6 +101,18 @@ void benchmark()
             elapsed = (double)(end - start) / CLOCKS_PER_SEC;
             totalRemoveOrder += elapsed;
 
+            start = clock();
+            createIndex(PRODUCT_DAT, PRODUCT_INDEX, sizeof(Product), &productTree);
+            end = clock();
+            elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+            totalIndexProduct += elapsed;
+
+            start = clock();
+            createIndex(ORDER_DAT, ORDER_INDEX, sizeof(Order), &orderTree);
+            end = clock();
+            elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+            totalIndexOrder += elapsed;
+
             free(newOrder);
             free(newProduct);
         }
@@ -114,4 +128,6 @@ void benchmark()
     printf("Total Insert Order: %.4f s\n", totalInsertOrder);
     printf("Total Remove Product: %.4f s\n", totalRemoveProd);
     printf("Total Remove Order: %.4f s\n", totalRemoveOrder);
+    printf("Total Index Product: %.4f s\n", totalIndexProduct);
+    printf("Total Index Order: %.4f s\n", totalIndexOrder);
 }

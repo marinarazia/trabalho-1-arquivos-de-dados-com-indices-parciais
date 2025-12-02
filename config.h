@@ -16,12 +16,9 @@
 #define BPT_ORDER 169
 #define USE_BTREE_INDEX 1
 
-// Hash index
-//
-
 // Cryptography 
 #define SECRET_KEY "ibQ2_iXNaW95MBXCuAgd3qluAa0nK1qg" // 32B
-#define DECRYPT_ON_READ 1
+#define DECRYPT_ON_READ 0
 
 // Dataset processing
 #define TEMP_PREFIX "temp"

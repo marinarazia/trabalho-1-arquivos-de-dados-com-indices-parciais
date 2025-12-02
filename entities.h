@@ -2,9 +2,9 @@
 typedef struct BPTNode {
     int isLeaf;  // 4B
     int numKeys; // 4B
-    long long keys[BPT_ORDER]; 
-    struct BPTNode *children[BPT_ORDER+1];
-    long offsets[BPT_ORDER];  
+    long long keys[BPT_ORDER]; // 8B * ORDER
+    struct BPTNode *children[BPT_ORDER+1]; // 8B * (ORDER+1)
+    long offsets[BPT_ORDER];  // 8B * ORDER
     struct BPTNode *next;     // 8B             
     struct BPTNode *parent;   // 8B
 } BPTNode;  // ORDER 169 = 4096B cada nó

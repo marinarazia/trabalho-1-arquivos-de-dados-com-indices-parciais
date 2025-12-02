@@ -56,7 +56,7 @@ int main()
         printf("\n--- MENU ---\n");
         printf("1  - Listar ordens de compra\n");
         printf("2  - Listar produtos\n\n");
-        printf("3  - Pesquisar compras de usuario\n\n");
+        printf("3  - Pesquisar compras de usuario\n");
         printf("4  - Pesquisar compras de usuario com Hash\n\n");
         printf("5  - Pesquisar produto por id\n");
         printf("6  - Pesquisar ordem por id\n\n");

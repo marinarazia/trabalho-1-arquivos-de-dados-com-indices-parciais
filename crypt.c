@@ -1,6 +1,13 @@
 #include <sodium.h>
  
 // algoritmo usado: XSalsa20-Poly1305 (criptografia simétrica autenticada)
+// - 1 chave secreta
+// - gera nonce aleatório
+// - criptografa com XSalsa20
+// - autentica com Poly1305
+// - detecta qualquer adulteração automaticamente
+// - codifica o resultado em Base64
+// - output tamanho variável: [ NONCE ][ CIPHERTEXT ]
 
 // Codifica Base64
 char* to_base64(const unsigned char* data, size_t len)
